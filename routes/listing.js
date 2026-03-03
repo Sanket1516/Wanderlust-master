@@ -59,6 +59,11 @@ const listings = await Listing.find({
         req.user ? req.user.wishlist.map(id => id.toString()) : []
     );
 
+    // pagination: null — the search route returns all matching results at once without paging.
+    // The index.ejs template checks `if(pagination && ...)` before rendering the pagination bar,
+    // so passing null here safely skips the entire pagination block on search result pages.
+    // filters: {} — no advanced filters are active on a search, so pass an empty object
+    // to avoid "filters is undefined" errors inside the template's filter-chip and pageUrl logic.
     res.render("listings/index", { allListings: listings, wishlistSet, filters: {}, pagination: null });
 }));
 

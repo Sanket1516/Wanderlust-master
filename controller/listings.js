@@ -34,30 +34,68 @@ module.exports.index = async (req, res, next) => {
         else if (sort === "price_desc") sortOption = { price: -1 };
         else if (sort === "newest")     sortOption = { _id:   -1 };
 
-        // Pagination
-        const LIMIT       = 12;
-        const currentPage = Math.max(1, parseInt(page) || 1);
-        const totalCount  = await Listing.countDocuments(filter);
-        const totalPages  = Math.ceil(totalCount / LIMIT) || 1;
-        const safePage    = Math.min(currentPage, totalPages);
+        // ── PAGINATION ────────────────────────────────────────────────────
+        // How many listings to show per page — changing this one constant
+        // automatically adjusts skip, totalPages, and the result-count label in the view.
+        const LIMIT = 12;
 
+        // Parse the ?page= query param; fall back to 1 if missing or non-numeric.
+        // Math.max(1, ...) ensures the page never goes below 1 even if someone passes ?page=0.
+        const currentPage = Math.max(1, parseInt(page) || 1);
+
+        // Count how many documents match the current filter WITHOUT fetching them.
+        // This is a lightweight MongoDB operation — no documents are loaded into memory.
+        // We need this number to calculate totalPages and to show "Showing X–Y of Z" in the view.
+        const totalCount = await Listing.countDocuments(filter);
+
+        // Calculate how many pages are needed.
+        // Math.ceil rounds up so a partial last page still counts (e.g. 13 docs → 2 pages).
+        // The "|| 1" fallback ensures totalPages is never 0 when there are no listings.
+        const totalPages = Math.ceil(totalCount / LIMIT) || 1;
+
+        // Clamp the requested page to the valid range [1, totalPages].
+        // Protects against ?page=9999 when only 3 pages exist — instead of an empty result
+        // it silently shows the last page.
+        const safePage = Math.min(currentPage, totalPages);
+
+        // Fetch only the listings for the current page using skip + limit.
+        // skip((safePage - 1) * LIMIT) — jump past all listings on earlier pages.
+        // limit(LIMIT) — take at most LIMIT documents from that offset.
         const allListings = await Listing.find(filter)
             .sort(sortOption)
-            .skip((safePage - 1) * LIMIT)
-            .limit(LIMIT);
+            .skip((safePage - 1) * LIMIT)  // offset: how many docs to skip before this page
+            .limit(LIMIT);                  // cap: maximum docs to return for this page
 
-        // Build page-number array for the template (e.g. [1, '...', 4, 5, 6, '...', 12])
+        // ── PAGE NUMBER ARRAY ─────────────────────────────────────────────
+        // Build the array that the EJS template loops over to render page buttons.
+        // Entries are either integers (clickable page numbers) or the string "..."
+        // (non-clickable ellipsis gap).  All logic lives here so the template stays clean.
         const pageNumbers = [];
+
         if (totalPages <= 7) {
+            // Fewer than 8 pages — show every page number with no ellipsis needed.
             for (let i = 1; i <= totalPages; i++) pageNumbers.push(i);
         } else {
-            pageNumbers.push(1);
-            if (safePage > 3)             pageNumbers.push("...");
-            const start = Math.max(2, safePage - 1);
-            const end   = Math.min(totalPages - 1, safePage + 1);
-            for (let i = start; i <= end; i++) pageNumbers.push(i);
+            // Many pages — use the smart condensed pattern:
+            // [1, '...', prev, current, next, '...', last]
+
+            pageNumbers.push(1);  // first page is always visible
+
+            // Add a leading ellipsis when the current page is far from the start
+            // (gap of more than 1 between page 1 and the window start)
+            if (safePage > 3) pageNumbers.push("...");
+
+            // Window of pages around the current page: [current-1, current, current+1]
+            // Math.max(2, ...) stops the window from overlapping page 1.
+            // Math.min(totalPages-1, ...) stops it from overlapping the last page.
+            const start = Math.max(2, safePage - 1);           // first page in the window
+            const end   = Math.min(totalPages - 1, safePage + 1); // last page in the window
+            for (let i = start; i <= end; i++) pageNumbers.push(i); // push window pages
+
+            // Add a trailing ellipsis when the current page is far from the end
             if (safePage < totalPages - 2) pageNumbers.push("...");
-            pageNumbers.push(totalPages);
+
+            pageNumbers.push(totalPages); // last page is always visible
         }
 
         // Build a JavaScript Set of the logged-in user's wishlisted listing IDs (as strings).
@@ -69,7 +107,15 @@ module.exports.index = async (req, res, next) => {
             allListings,
             wishlistSet,
             filters: req.query,
-            pagination: { currentPage: safePage, totalPages, totalCount, LIMIT, pageNumbers }
+            // Pass the full pagination object so the template can render the bar
+            // and the "Showing X–Y of Z" result count without doing any math itself.
+            pagination: {
+                currentPage: safePage, // the actual page being shown (clamped)
+                totalPages,            // total number of pages for this filter
+                totalCount,            // total matching listings (for result count label)
+                LIMIT,                 // docs per page (used in the view for from/to calc)
+                pageNumbers            // pre-built array of numbers + "..." for the page buttons
+            }
         });
         return;
 };

@@ -243,59 +243,71 @@
                         computed in the controller to keep EJS logic minimal
      pagination is null on the /search route, so the whole block is safely skipped.
      ===================================================================== -->
+
+<%# Skip the entire pagination block if pagination is null (search route) or there is only 1 page %>
 <% if(pagination && pagination.totalPages > 1) { %>
+
 <%
-    // pageUrl(n) — builds a full query string for page n while keeping
-    // all currently active filter params (minPrice, maxPrice, country, sort, category).
-    // This ensures that navigating between pages never loses the user's filter state.
-    // URLSearchParams is available server-side in Node.js (global since v10).
-    function pageUrl(pageNum) {
-        const p = new URLSearchParams();
-        if (filters.minPrice)  p.set("minPrice",  filters.minPrice);
-        if (filters.maxPrice)  p.set("maxPrice",  filters.maxPrice);
-        if (filters.country)   p.set("country",   filters.country);
-        if (filters.sort)      p.set("sort",      filters.sort);
-        if (filters.category)  p.set("category",  filters.category);
-        p.set("page", pageNum);
-        return "/listings?" + p.toString();
+    // pageUrl(pageNum) — server-side helper used by every page link in this block.
+    // It builds a /listings?... URL that carries forward all active filter params
+    // so navigating between pages never silently drops the user's filter state.
+    // URLSearchParams is a Node.js built-in (available globally since Node 10).
+    function pageUrl(pageNum) {                              // accepts the target page number
+        const p = new URLSearchParams();                     // start with an empty query builder
+        if (filters.minPrice)  p.set("minPrice",  filters.minPrice);  // carry forward min price if set
+        if (filters.maxPrice)  p.set("maxPrice",  filters.maxPrice);  // carry forward max price if set
+        if (filters.country)   p.set("country",   filters.country);   // carry forward country filter if set
+        if (filters.sort)      p.set("sort",       filters.sort);     // carry forward sort option if set
+        if (filters.category)  p.set("category",  filters.category);  // carry forward category filter if set
+        p.set("page", pageNum);                              // set the actual page number we're linking to
+        return "/listings?" + p.toString();                  // return the final URL string
     }
 %>
+
+<%# Outer <nav> wrapper — gives the pagination bar semantic meaning and an accessible label %>
 <nav class="pagination-wrap" aria-label="Listings pagination">
 
-    <!-- Prev button: disabled (pointer-events: none + opacity) when on page 1 -->
+    <%# ── PREVIOUS BUTTON ──────────────────────────────────────────── %>
+    <%# href points to (currentPage - 1) via pageUrl so filters are preserved %>
+    <%# 'disabled' class is added when we are already on page 1 (CSS blocks clicks + fades it) %>
     <a href="<%= pageUrl(pagination.currentPage - 1) %>"
        class="page-btn page-prev <%= pagination.currentPage === 1 ? 'disabled' : '' %>"
        aria-label="Previous page">
-        <i class="fa-solid fa-chevron-left"></i>
+        <i class="fa-solid fa-chevron-left"></i>  <%# left-arrow icon inside the button %>
     </a>
 
-    <!-- Page number buttons
-         pagination.pageNumbers is an array of integers and "..." strings.
-         Example for 12 pages on page 5: [1, '...', 4, 5, 6, '...', 12]
-         "..." entries render as a non-clickable ellipsis span.
-         The active page gets the .active class (dark background, no pointer events). -->
-    <% for(let p of pagination.pageNumbers) { %>
+    <%# ── PAGE NUMBER BUTTONS ──────────────────────────────────────── %>
+    <%# pagination.pageNumbers is an array of integers and "..." strings built in the controller %>
+    <%# Example for 12 total pages while on page 5: [1, "...", 4, 5, 6, "...", 12] %>
+    <% for(let p of pagination.pageNumbers) { %>  <%# loop over every entry in the pageNumbers array %>
+
+        <%# If the entry is the ellipsis sentinel string, render a non-clickable dots span %>
         <% if(p === "...") { %>
-        <span class="page-ellipsis">…</span>
+        <span class="page-ellipsis">…</span>  <%# visual gap between page groups, not a link %>
+
+        <%# Otherwise render a clickable page-number link %>
         <% } else { %>
-        <a href="<%= pageUrl(p) %>"
-           class="page-btn <%= p === pagination.currentPage ? 'active' : '' %>"
-           aria-label="Page <%= p %>"
-           aria-current="<%= p === pagination.currentPage ? 'page' : '' %>">
-            <%= p %>
+        <a href="<%= pageUrl(p) %>"                                        <%# link to this page number, preserving filters %>
+           class="page-btn <%= p === pagination.currentPage ? 'active' : '' %>"  <%# 'active' highlights the current page (dark bg, no pointer) %>
+           aria-label="Page <%= p %>"                                      <%# screen-reader label %>
+           aria-current="<%= p === pagination.currentPage ? 'page' : '' %>">     <%# tells screen readers which page is current %>
+            <%= p %>  <%# render the page number as the button label %>
         </a>
         <% } %>
-    <% } %>
 
-    <!-- Next button: disabled when already on the last page -->
+    <% } %>  <%# end of pageNumbers loop %>
+
+    <%# ── NEXT BUTTON ──────────────────────────────────────────────── %>
+    <%# href points to (currentPage + 1) via pageUrl so filters are preserved %>
+    <%# 'disabled' class is added when we are already on the last page %>
     <a href="<%= pageUrl(pagination.currentPage + 1) %>"
        class="page-btn page-next <%= pagination.currentPage === pagination.totalPages ? 'disabled' : '' %>"
        aria-label="Next page">
-        <i class="fa-solid fa-chevron-right"></i>
+        <i class="fa-solid fa-chevron-right"></i>  <%# right-arrow icon inside the button %>
     </a>
 
-</nav>
-<% } %>
+</nav>  <%# end of pagination nav %>
+<% } %>  <%# end of pagination visibility check %>
 
 <!-- TAX TOGGLE -->
 <script>
