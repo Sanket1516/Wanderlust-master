@@ -1,0 +1,9 @@
+//This is to check if particula package is installed or not
+//just replace joi with your package name
+if npm list joi > /dev/null 2>&1; then
+  echo "Package is installed"
+else
+  echo "Package is NOT installed"
+fi
+
+

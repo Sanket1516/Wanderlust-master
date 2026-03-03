@@ -1,0 +1,72 @@
+<% layout("/../layouts/boilerplate") %>
+<body> 
+    <!-- Now for form validation we have two ways:
+    1)first is to use the HTML5 validation which is done by adding the "required" attribute to the input fields.
+    a)This will change the error msg from browser to browser and will not be consistent.
+    2)The second way is to use JavaScript to validate the form before submission with bootstrap.
+    we will use 2nd -->
+    <div class="row mt-3">
+        <div class="col-8 offset-2" >
+    <h3>Create a new Listing</h3>
+    <!-- This two attributes novalidate and class - needs-validation are for bootstrap form validation; -->
+    <form method="post" action="/listings" novalidate class="needs-validation" enctype="multipart/form-data">
+        <div class="mb-3">
+            <label for="title" class="form-label">Title</label>
+            <input type="text" placeholder="Add a catchy Title" name="listing[title]" class="form-control" required>
+            <!-- Now For Printing Success and Error messages we will use the bootstrap classes. 
+             for success we will use "is-valid" and for error we will use "is-invalid" as a class name for a div and will create that div within a div where a input tag is present-->
+            <div class="invalid-feedback">Please Enter a valid title</div>
+        </div>
+        <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            <textarea name="listing[description]" class="form-control" required></textarea>
+            <div class="invalid-feedback">Please Enter a valid description</div>
+        </div>
+        <div class="mb-3">
+            <label for="image" class="form-label">Upload the Image</label>
+            <input type="file" name="listing[image]" class="form-control">
+            required
+            <div class="invalid-feedback">Please Enter a valid image URL</div>
+        </div>
+        <div class="row">
+        <div class="mb-3 col-md-4">
+            <label for="price" class="form-label">Price</label>
+            <input name="listing[price]" placeholder="200" class="form-control" required>
+            <div class="invalid-feedback">Please Enter a valid price</div>
+
+        </div>
+        <div class="mb-3 col-md-8">
+            <label for="country" class="form-label">Country</label>
+            <input type="text" name="listing[country]" placeholder="India" class="form-control" required>
+            <div class="invalid-feedback">Please Enter the valid country</div>
+        </div>
+
+        <div class="mb-3">
+        <label class="form-label">Category</label>
+        <select name="listing[category]" class="form-select" required>
+            <option value="" disabled selected>Select category</option>
+            <option value="Rooms">Rooms</option>
+            <option value="Mountains">Mountains</option>
+            <option value="City">City</option>
+            <option value="Castles">Castles</option>
+            <option value="Pools">Pools</option>
+            <option value="Camp">Camping</option>
+            <option value="Cabin">Cabins</option>
+            <option value="Nature">Nature</option>
+            <option value="Farm">Farms</option>
+            <option value="Boat">Boats</option>
+            <option value="Cruise">Cruise</option>
+        </select>
+        </div>
+    
+        </div>
+        <div class="mb-3">
+            <label for="location" class="form-label">Location</label>
+            <input type="text" name="listing[location]" placeholder="Mumbai, Maharashtra" class="form-control" required>
+            <div class="invalid-feedback">Please Enter a valid location</div>
+        </div>
+        <button class="btn btn-dark add-btn mt-3">Add</button>
+    </form>
+    </div>
+    </div >
+</body>

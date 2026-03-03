@@ -1,0 +1,38 @@
+<nav class="navbar navbar-expand-md bg-body-light border-bottom sticky-top">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="/listings"><i class="fa-solid fa-compass"></i></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+      <div class="navbar-nav">
+        <a class="nav-link" href="/listings">Explore</a>
+      </div>
+      <div class="navbar-nav mx-auto">
+        <form action="/listings/search" method="GET" class="d-flex">
+    <input
+        class="form-control me-2"
+        type="search"
+        name="q"
+        placeholder="Search destinations, categories..."
+        aria-label="Search"
+        required
+    >
+    <button class="btn btn-outline-dark" type="submit">Search</button>
+</form>
+
+      </div>
+        <div class="navbar-nav ms-auto">
+          <a class="nav-link" href="/listings/new">Airbnb your home</a>
+          <!-- we cant access req.user here directly so we will create a local and it wll be accessible here -->
+           <!-- We store the req.user in res.locals.currUser in app.js -->
+        <% if(!currUser) { %>
+        <a class="nav-link"  href="/signup"><b>Sign Up</b></a>
+        <a class="nav-link" href="/login"><b>Log In</b></a>
+        <% } else { %>
+        <a class="nav-link" href="/logout">Log Out</a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</nav>
