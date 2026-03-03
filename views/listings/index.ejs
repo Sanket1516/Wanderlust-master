@@ -1,113 +1,78 @@
 <% layout("/../layouts/boilerplate") %>
 
-<style>
-    #filters{
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-    }
-
-    .filter{
-        text-align: center;
-        margin-right: 2rem;
-        margin-top: 2rem;
-        opacity: 0.7;
-    }
-
-    .filter:hover{
-        opacity: 1;
-        cursor: pointer;
-    }
-
-    .filter p{
-        font-size: 0.8rem;
-    }
-
-    .taxInfo{
-        display: none;
-    }
-
-    .tax-toggle{
-        border: 1px solid lightgray;
-        border-radius: 1rem;
-        height: 3.5rem;
-        padding: 1rem;
-        margin-left: 2rem;
-        margin-top: 15px;
-    }
-</style>
-
 <body>
 
-<!-- FILTER BAR -->
-<div id="filters">
+<!-- CATEGORY FILTER BAR -->
+<div class="filter-bar-wrap">
+    <div id="filters">
 
-    <div class="filter" data-filter="All">
-        <div><i class="fa-solid fa-fire"></i></div>
-        <p>Trending</p>
-    </div>
+        <div class="filter active" data-filter="All">
+            <div><i class="fa-solid fa-fire"></i></div>
+            <p>Trending</p>
+        </div>
 
-    <div class="filter" data-filter="Rooms">
-        <div><i class="fa-solid fa-bed"></i></div>
-        <p>Rooms</p>
-    </div>
+        <div class="filter" data-filter="Rooms">
+            <div><i class="fa-solid fa-bed"></i></div>
+            <p>Rooms</p>
+        </div>
 
-    <div class="filter" data-filter="City">
-        <div><i class="fa-solid fa-mountain-city"></i></div>
-        <p>Iconic Cities</p>
-    </div>
+        <div class="filter" data-filter="City">
+            <div><i class="fa-solid fa-mountain-city"></i></div>
+            <p>Iconic Cities</p>
+        </div>
 
-    <div class="filter" data-filter="Mountains">
-        <div><i class="fa-solid fa-mountain"></i></div>
-        <p>Mountains</p>
-    </div>
+        <div class="filter" data-filter="Mountains">
+            <div><i class="fa-solid fa-mountain"></i></div>
+            <p>Mountains</p>
+        </div>
 
-    <div class="filter" data-filter="Castles">
-        <div><i class="fa-brands fa-fort-awesome"></i></div>
-        <p>Castles</p>
-    </div>
+        <div class="filter" data-filter="Castles">
+            <div><i class="fa-brands fa-fort-awesome"></i></div>
+            <p>Castles</p>
+        </div>
 
-    <div class="filter" data-filter="Pools">
-        <div><i class="fa-solid fa-person-swimming"></i></div>
-        <p>Amazing Pools</p>
-    </div>
+        <div class="filter" data-filter="Pools">
+            <div><i class="fa-solid fa-person-swimming"></i></div>
+            <p>Amazing Pools</p>
+        </div>
 
-    <div class="filter" data-filter="Camp">
-        <div><i class="fa-solid fa-campground"></i></div>
-        <p>Camping</p>
-    </div>
+        <div class="filter" data-filter="Camp">
+            <div><i class="fa-solid fa-campground"></i></div>
+            <p>Camping</p>
+        </div>
 
-    <div class="filter" data-filter="Cabin">
-        <div><i class="fa-solid fa-snowflake"></i></div>
-        <p>Cabins</p>
-    </div>
+        <div class="filter" data-filter="Cabin">
+            <div><i class="fa-solid fa-snowflake"></i></div>
+            <p>Cabins</p>
+        </div>
 
-    <div class="filter" data-filter="Nature">
-        <div><i class="fa-solid fa-tree"></i></div>
-        <p>Nature</p>
-    </div>
+        <div class="filter" data-filter="Nature">
+            <div><i class="fa-solid fa-tree"></i></div>
+            <p>Nature</p>
+        </div>
 
-    <div class="filter" data-filter="Farm">
-        <div><i class="fa-solid fa-cow"></i></div>
-        <p>Farms</p>
-    </div>
+        <div class="filter" data-filter="Farm">
+            <div><i class="fa-solid fa-cow"></i></div>
+            <p>Farms</p>
+        </div>
 
-    <div class="filter" data-filter="Boat">
-        <div><i class="fa-solid fa-sailboat"></i></div>
-        <p>Boats</p>
-    </div>
+        <div class="filter" data-filter="Boat">
+            <div><i class="fa-solid fa-sailboat"></i></div>
+            <p>Boats</p>
+        </div>
 
-    <div class="filter" data-filter="Cruise">
-        <div><i class="fa-solid fa-ship"></i></div>
-        <p>Cruise</p>
-    </div>
+        <div class="filter" data-filter="Cruise">
+            <div><i class="fa-solid fa-ship"></i></div>
+            <p>Cruise</p>
+        </div>
 
-    <div class="tax-toggle">
-        <div class="form-check-reverse form-switch">
-            <input class="form-check-input" type="checkbox" id="switchCheckDefault">
-            <label class="form-check-label" for="switchCheckDefault">
-                Display Total after taxes
-            </label>
+        <div class="tax-toggle ms-auto">
+            <div class="form-check-reverse form-switch">
+                <input class="form-check-input" type="checkbox" id="switchCheckDefault">
+                <label class="form-check-label" for="switchCheckDefault">
+                    Show taxes
+                </label>
+            </div>
         </div>
     </div>
 </div>
@@ -115,8 +80,6 @@
 <!-- ADVANCED FILTER TOOLBAR -->
 <%
     const hasFilters = filters && (filters.minPrice || filters.maxPrice || filters.country || filters.sort);
-    // Build a query string that preserves current filters (for clear link)
-    const clearHref = "/listings";
 %>
 <div class="adv-filter-toolbar d-flex align-items-center flex-wrap gap-2 mt-3 mb-1">
     <!-- Result count -->
@@ -146,7 +109,6 @@
     </a>
     <% } %>
 
-    <!-- Filter toggle button (right-aligned) -->
     <button class="btn btn-sm adv-filter-toggle ms-auto <%= hasFilters ? 'active' : '' %>"
             type="button"
             data-bs-toggle="collapse"
@@ -197,62 +159,67 @@
 </div>
 
 <!-- LISTINGS GRID -->
-<div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 mt-3">
+<div class="row row-cols-xl-4 row-cols-lg-3 row-cols-md-2 row-cols-sm-1 mt-4 g-4">
 
     <% if(allListings.length === 0) { %>
     <div class="col-12 text-center py-5">
         <i class="fa-solid fa-house-circle-xmark fa-3x text-muted mb-3 d-block"></i>
-        <p class="text-muted">No listings match your filters.</p>
+        <p class="text-muted mb-1 fw-semibold">No listings found</p>
+        <p class="text-muted small mb-3">Try adjusting or clearing your filters.</p>
         <a href="/listings" class="btn btn-sm btn-outline-danger">Clear filters &amp; show all</a>
     </div>
     <% } %>
 
     <% for(let listing of allListings){ %>
+    <div class="col">
         <a href="/listings/<%= listing._id %>" class="listing_link">
+            <div class="listing-card position-relative" data-category="<%= listing.category %>">
 
-            <div class="card col listing-card position-relative"
-                 data-category="<%= listing.category %>">
-                <!-- position-relative is needed so the heart button (position-absolute) stays inside the card -->
+                <!-- Image -->
+                <div class="listing-img-wrap">
+                    <img src="<%= listing.image.url %>"
+                         class="listing-img"
+                         alt="<%= listing.title %>"
+                         loading="lazy">
 
-                <img src="<%= listing.image.url %>"
-                     class="card-img-top"
-                     alt="listing_image"
-                     style="height:200px; object-fit:cover;">
+                    <!-- Category badge on image -->
+                    <span class="listing-cat-badge"><%= listing.category %></span>
 
-                <!-- Only render the heart button if the user is logged in (guests see no button) -->
-                <% if(currUser) { %>
-                <%
-                    // Check if this listing's ID exists in the wishlistSet (passed from the controller).
-                    // wishlistSet is a JavaScript Set of stringified listing ObjectIds.
-                    // .has() is O(1) — much faster than .includes() on an array.
-                    const isWishlisted = wishlistSet.has(listing._id.toString());
-                %>
-                <button
-                    class="btn wish-btn position-absolute top-0 end-0 m-2 p-1"
-                    data-listing-id="<%= listing._id %>"
-                    data-wishlisted="<%= isWishlisted %>"
-                    aria-label="Save to wishlist"
-                    title="<%= isWishlisted ? 'Remove from wishlist' : 'Save to wishlist' %>"
-                    style="background:rgba(255,255,255,0.85); border-radius:50%; width:2rem; height:2rem; line-height:1;">
-                    <!-- Render a solid red heart if wishlisted, or an outline heart if not -->
-                    <i class="<%= isWishlisted ? 'fa-solid fa-heart text-danger' : 'fa-regular fa-heart text-dark' %>"></i>
-                </button>
-                <% } %>
+                    <!-- Wishlist heart button -->
+                    <% if(currUser) { %>
+                    <%
+                        const isWishlisted = wishlistSet.has(listing._id.toString());
+                    %>
+                    <button
+                        class="wish-btn"
+                        data-listing-id="<%= listing._id %>"
+                        data-wishlisted="<%= isWishlisted %>"
+                        aria-label="Save to wishlist"
+                        title="<%= isWishlisted ? 'Remove from wishlist' : 'Save to wishlist' %>">
+                        <i class="<%= isWishlisted ? 'fa-solid fa-heart text-danger' : 'fa-regular fa-heart' %>"></i>
+                    </button>
+                    <% } %>
+                </div>
 
-                <div class="card-body">
-                    <p class="card-text">
-                        <b><%= listing.title %></b><br>
-                        &#8377;<%= listing.price.toLocaleString("en-IN") %> / night
-
-                        <i class="taxInfo">
-                            &nbsp;&nbsp;+18% GST
-                            &#8377;<%= (listing.price * 1.18).toLocaleString("en-IN") %>
-                        </i>
-                    </p>
+                <!-- Card body -->
+                <div class="listing-info">
+                    <div class="listing-title"><%= listing.title %></div>
+                    <div class="listing-location">
+                        <i class="fa-solid fa-location-dot"></i>
+                        <%= listing.location %>, <%= listing.country %>
+                    </div>
+                    <div class="listing-price">
+                        <span class="price-amt">&#8377;<%= listing.price.toLocaleString("en-IN") %></span>
+                        <span class="price-unit">/ night</span>
+                        <span class="taxInfo price-tax">
+                            &nbsp;·&nbsp;&#8377;<%= (listing.price * 1.18).toLocaleString("en-IN") %> with taxes
+                        </span>
+                    </div>
                 </div>
 
             </div>
         </a>
+    </div>
     <% } %>
 
 </div>
@@ -260,86 +227,68 @@
 <!-- TAX TOGGLE -->
 <script>
     const priceSwitch = document.getElementById("switchCheckDefault");
-
     priceSwitch.addEventListener("click", () => {
-        const taxInfo = document.getElementsByClassName("taxInfo");
-
-        for (let info of taxInfo) {
-            info.style.display = priceSwitch.checked ? "inline" : "none";
+        const taxInfoEls = document.getElementsByClassName("taxInfo");
+        for (let el of taxInfoEls) {
+            el.style.display = priceSwitch.checked ? "inline" : "none";
         }
     });
 </script>
 
-<!-- FILTER LOGIC -->
+<!-- CATEGORY FILTER LOGIC -->
 <script>
-    const filters = document.querySelectorAll(".filter");
-    const listingLinks = document.querySelectorAll(".listing_link");
+    const categoryBtns = document.querySelectorAll(".filter");
+    const listingCards = document.querySelectorAll(".listing_link");
 
-    filters.forEach(filter => {
-        filter.addEventListener("click", () => {
-            const selectedCategory = filter.getAttribute("data-filter");
+    categoryBtns.forEach(function(btn) {
+        btn.addEventListener("click", function() {
+            // Update active state
+            categoryBtns.forEach(function(b) { b.classList.remove("active"); });
+            this.classList.add("active");
 
-            listingLinks.forEach(link => {
+            const selected = this.getAttribute("data-filter");
+
+            listingCards.forEach(function(link) {
                 const card = link.querySelector(".listing-card");
-                const cardCategory = card.getAttribute("data-category");
-
-                if (selectedCategory === "All" || cardCategory === selectedCategory) {
-                    link.style.display = "";
-                } else {
-                    link.style.display = "none";
-                }
+                const cat  = card.getAttribute("data-category");
+                link.style.display = (selected === "All" || cat === selected) ? "" : "none";
             });
         });
     });
 </script>
 
 <!-- WISHLIST TOGGLE (AJAX) -->
-<!-- This script intercepts heart button clicks, calls the toggle API, and updates the UI without a page reload -->
 <script>
-    // Grab the navbar badge element to update its count after every toggle
     const wishlistBadge = document.getElementById("wishlist-badge");
 
-    // Attach click listener to every heart button on the page
     document.querySelectorAll(".wish-btn").forEach(function(btn) {
         btn.addEventListener("click", function(e) {
-            e.preventDefault();     // Prevent the button from acting as a form submit
-            e.stopPropagation();    // Prevent the click from bubbling up to the parent <a> tag (which would navigate to the show page)
+            e.preventDefault();
+            e.stopPropagation();
 
-            // Read the listing ID stored in the button's data-listing-id attribute
             const listingId = this.dataset.listingId;
-            // Grab the <i> icon element inside this button to swap icon classes later
             const icon = this.querySelector("i");
 
-            // Send an HTTP POST to the toggle endpoint.
-            // The "X-Requested-With" header tells the server this is an AJAX request
-            // so the controller returns JSON instead of doing a redirect.
             fetch("/wishlist/" + listingId + "/toggle", {
                 method: "POST",
                 headers: { "X-Requested-With": "XMLHttpRequest" },
-                credentials: "same-origin" // Send the session cookie so the server knows who we are
+                credentials: "same-origin"
             })
             .then(function(r) {
-                // If the server redirected (e.g. session expired → /login), send user to login page
                 if (r.redirected) { window.location.href = "/login"; return null; }
-                return r.json(); // Parse the JSON response body
+                return r.json();
             })
             .then(function(data) {
-                if (!data) return; // Bail out if we got no data (redirect case above)
-
+                if (!data) return;
                 if (data.wishlisted) {
-                    // Listing was ADDED to wishlist → switch to solid red heart
                     icon.classList.replace("fa-regular", "fa-solid");
-                    icon.classList.replace("text-dark", "text-danger");
+                    icon.classList.add("text-danger");
                 } else {
-                    // Listing was REMOVED from wishlist → switch back to outline heart
                     icon.classList.replace("fa-solid", "fa-regular");
-                    icon.classList.replace("text-danger", "text-dark");
+                    icon.classList.remove("text-danger");
                 }
-
-                // Update the navbar badge count with the new total from the server response
                 if (wishlistBadge) {
                     wishlistBadge.textContent = data.wishlistCount;
-                    // Hide the badge entirely if count is 0 (d-none = Bootstrap display:none)
                     wishlistBadge.classList.toggle("d-none", data.wishlistCount === 0);
                 }
             })
