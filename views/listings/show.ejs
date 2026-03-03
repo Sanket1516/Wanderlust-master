@@ -6,8 +6,31 @@
         const coordinates = <%-JSON.stringify(data.geometry.coordinates) %>;
     </script>
     <div class="row mt-3">
-        <div class="col-8 offset-3">
-    <h3><%=data.title%></h3>
+        <!-- d-flex + align-items-center + gap-3 = puts the title and heart button side by side with space between -->
+        <div class="col-8 offset-3 d-flex align-items-center gap-3">
+    <h3 class="mb-0"><%=data.title%></h3>
+
+    <!-- Only show the Save/Saved button if the user is logged in -->
+    <% if(currUser) { %>
+    <%
+        // Check if this listing is already in the logged-in user's wishlist.
+        // wishlistSet is a Set of stringified ObjectIds passed from controller/listings.js.
+        // .has() returns true (show "Saved" button) or false (show "Save" button).
+        const isWishlisted = wishlistSet.has(data._id.toString());
+    %>
+    <!-- Use a regular form POST (not AJAX) for the show page - simpler approach,
+         page will reload after toggling which refreshes the button state automatically -->
+    <form action="/wishlist/<%= data._id %>/toggle" method="POST" class="d-inline">
+        <button type="submit"
+            <% /* Change button style based on wishlist state: filled danger = saved, outline = not saved */ %>
+            class="btn btn-sm <%= isWishlisted ? 'btn-danger' : 'btn-outline-danger' %>"
+            title="<%= isWishlisted ? 'Remove from wishlist' : 'Save to wishlist' %>">
+            <!-- Solid heart icon if saved, outline if not -->
+            <i class="<%= isWishlisted ? 'fa-solid fa-heart' : 'fa-regular fa-heart' %>"></i>
+            <%= isWishlisted ? 'Saved' : 'Save' %>
+        </button>
+    </form>
+    <% } %>
     </div>
     <div class="card col-6 offset-3 show-card listing-card">
         <img src="<%=data.image.url%>" class="card-img-top show-img" alt="listing_image">

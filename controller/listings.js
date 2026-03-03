@@ -12,7 +12,17 @@ const geocodingClient = mbxGeocoding({ accessToken: mapToken });//we have now cr
 
 module.exports.index = async (req, res,next) => {
         const allListings = await Listing.find({}); // Fetch all listings from the database
-        res.render("listings/index.ejs", { allListings }); // Render the index page with all listings
+
+        // Build a JavaScript Set of the logged-in user's wishlisted listing IDs (as strings).
+        // Using a Set gives O(1) lookup time in the EJS template (wishlistSet.has(id)).
+        // If no user is logged in, the Set is empty — no heart buttons will be filled.
+        // req.user.wishlist contains ObjectIds, so we call .toString() on each for string comparison.
+        const wishlistSet = new Set(
+            req.user ? req.user.wishlist.map(id => id.toString()) : []
+        );
+
+        // Pass wishlistSet alongside allListings so the template can render filled/outline hearts
+        res.render("listings/index.ejs", { allListings, wishlistSet }); // Render the index page with all listings
         return;
 };
 
@@ -43,9 +53,16 @@ module.exports.showListing = async (req, res) => {
         // Important: Handle case where a listing with the given ID is not found
         if (!data) {
             req.flash("error", "Listing Not Found!");
-            res.redirect("/listings");
+            return res.redirect("/listings"); // "return" is critical — prevents Express from continuing to res.render below
         }
-        res.render("listings/show.ejs", { data }); // Render the show page with listing data
+
+        // Build wishlistSet so the show page knows whether to render a filled or outline heart button.
+        // Same pattern as the index controller — Set of stringified ObjectIds for O(1) template lookup.
+        const wishlistSet = new Set(
+            req.user ? req.user.wishlist.map(id => id.toString()) : []
+        );
+
+        res.render("listings/show.ejs", { data, wishlistSet }); // Render the show page with listing data
         return;
     };
 

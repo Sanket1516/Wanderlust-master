@@ -118,13 +118,34 @@
     <% for(let listing of allListings){ %>
         <a href="/listings/<%= listing._id %>" class="listing_link">
 
-            <div class="card col listing-card"
+            <div class="card col listing-card position-relative"
                  data-category="<%= listing.category %>">
+                <!-- position-relative is needed so the heart button (position-absolute) stays inside the card -->
 
                 <img src="<%= listing.image.url %>"
                      class="card-img-top"
                      alt="listing_image"
                      style="height:200px; object-fit:cover;">
+
+                <!-- Only render the heart button if the user is logged in (guests see no button) -->
+                <% if(currUser) { %>
+                <%
+                    // Check if this listing's ID exists in the wishlistSet (passed from the controller).
+                    // wishlistSet is a JavaScript Set of stringified listing ObjectIds.
+                    // .has() is O(1) — much faster than .includes() on an array.
+                    const isWishlisted = wishlistSet.has(listing._id.toString());
+                %>
+                <button
+                    class="btn wish-btn position-absolute top-0 end-0 m-2 p-1"
+                    data-listing-id="<%= listing._id %>"
+                    data-wishlisted="<%= isWishlisted %>"
+                    aria-label="Save to wishlist"
+                    title="<%= isWishlisted ? 'Remove from wishlist' : 'Save to wishlist' %>"
+                    style="background:rgba(255,255,255,0.85); border-radius:50%; width:2rem; height:2rem; line-height:1;">
+                    <!-- Render a solid red heart if wishlisted, or an outline heart if not -->
+                    <i class="<%= isWishlisted ? 'fa-solid fa-heart text-danger' : 'fa-regular fa-heart text-dark' %>"></i>
+                </button>
+                <% } %>
 
                 <div class="card-body">
                     <p class="card-text">
@@ -176,6 +197,61 @@
                     link.style.display = "none";
                 }
             });
+        });
+    });
+</script>
+
+<!-- WISHLIST TOGGLE (AJAX) -->
+<!-- This script intercepts heart button clicks, calls the toggle API, and updates the UI without a page reload -->
+<script>
+    // Grab the navbar badge element to update its count after every toggle
+    const wishlistBadge = document.getElementById("wishlist-badge");
+
+    // Attach click listener to every heart button on the page
+    document.querySelectorAll(".wish-btn").forEach(function(btn) {
+        btn.addEventListener("click", function(e) {
+            e.preventDefault();     // Prevent the button from acting as a form submit
+            e.stopPropagation();    // Prevent the click from bubbling up to the parent <a> tag (which would navigate to the show page)
+
+            // Read the listing ID stored in the button's data-listing-id attribute
+            const listingId = this.dataset.listingId;
+            // Grab the <i> icon element inside this button to swap icon classes later
+            const icon = this.querySelector("i");
+
+            // Send an HTTP POST to the toggle endpoint.
+            // The "X-Requested-With" header tells the server this is an AJAX request
+            // so the controller returns JSON instead of doing a redirect.
+            fetch("/wishlist/" + listingId + "/toggle", {
+                method: "POST",
+                headers: { "X-Requested-With": "XMLHttpRequest" },
+                credentials: "same-origin" // Send the session cookie so the server knows who we are
+            })
+            .then(function(r) {
+                // If the server redirected (e.g. session expired → /login), send user to login page
+                if (r.redirected) { window.location.href = "/login"; return null; }
+                return r.json(); // Parse the JSON response body
+            })
+            .then(function(data) {
+                if (!data) return; // Bail out if we got no data (redirect case above)
+
+                if (data.wishlisted) {
+                    // Listing was ADDED to wishlist → switch to solid red heart
+                    icon.classList.replace("fa-regular", "fa-solid");
+                    icon.classList.replace("text-dark", "text-danger");
+                } else {
+                    // Listing was REMOVED from wishlist → switch back to outline heart
+                    icon.classList.replace("fa-solid", "fa-regular");
+                    icon.classList.replace("text-danger", "text-dark");
+                }
+
+                // Update the navbar badge count with the new total from the server response
+                if (wishlistBadge) {
+                    wishlistBadge.textContent = data.wishlistCount;
+                    // Hide the badge entirely if count is 0 (d-none = Bootstrap display:none)
+                    wishlistBadge.classList.toggle("d-none", data.wishlistCount === 0);
+                }
+            })
+            .catch(function(err) { console.error("Wishlist toggle failed:", err); });
         });
     });
 </script>

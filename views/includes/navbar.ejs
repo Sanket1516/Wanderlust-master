@@ -30,6 +30,19 @@
         <a class="nav-link"  href="/signup"><b>Sign Up</b></a>
         <a class="nav-link" href="/login"><b>Log In</b></a>
         <% } else { %>
+        <!-- WISHLIST NAV LINK — only visible to logged-in users -->
+        <!-- position-relative on the <a> is required so the badge (position-absolute) anchors to it -->
+        <a class="nav-link position-relative me-2" href="/wishlist">
+            <i class="fa-regular fa-heart"></i> Wishlist
+            <!-- Red badge showing the count of saved listings.
+                 wishlistCount is set in res.locals in app.js on every request — no extra DB query.
+                 'd-none' = Bootstrap's display:none — hides the badge when count is 0.
+                 The AJAX script in index.ejs/wishlist.ejs updates this count live after each toggle. -->
+            <span id="wishlist-badge"
+                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger <%= wishlistCount > 0 ? '' : 'd-none' %>">
+                <%= wishlistCount %>  <%# Rendered server-side on initial page load — always accurate %>
+            </span>
+        </a>
         <a class="nav-link" href="/logout">Log Out</a>
         <% } %>
       </div>

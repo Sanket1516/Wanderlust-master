@@ -92,7 +92,9 @@ if(process.env.NODE_ENV !== "production"){
     //Express Router apis middleware
     const listingsRouter = require("./routes/listing.js");
     const reviewsRouter = require("./routes/reviews.js");
-    const usersRouter = require("./routes/user.js")
+    const usersRouter = require("./routes/user.js");
+    // Wishlist router handles GET /wishlist (My Wishlist page) and POST /wishlist/:id/toggle (add/remove)
+    const wishlistRouter = require("./routes/wishlist.js");
 
     const sessionOptions = {
         secret : "Mysupersecretcode",
@@ -118,6 +120,10 @@ if(process.env.NODE_ENV !== "production"){
         res.locals.success = req.flash("success");
         res.locals.error = req.flash("error");
         res.locals.currUser = req.user;
+        // Pass the wishlist count to every view so the navbar badge always shows the correct number.
+        // req.user.wishlist is already loaded by Passport's deserializeUser (calls User.findById on every request)
+        // so this is just an array .length — no extra database query needed.
+        res.locals.wishlistCount = req.user ? req.user.wishlist.length : 0;
         next();
     });
 
@@ -148,6 +154,8 @@ if(process.env.NODE_ENV !== "production"){
     //if the api comes for reviews (/listings/-----) then listings middleware this will called for all the the request and handle it
     app.use("/listings/:id/reviews", reviewsRouter);
     app.use("/", usersRouter);
+    // Mount the wishlist router at root "/" so its routes resolve as /wishlist and /wishlist/:id/toggle
+    app.use("/", wishlistRouter);
 
     // ===============================================
     // 6. Error Handling Middleware

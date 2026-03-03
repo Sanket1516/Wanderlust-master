@@ -33,7 +33,8 @@ router.route("/")
 // PUT Route: Update a specific listing
 // DELETE Route: Delete a specific listing
 
-router.get("/search", async (req, res) => {
+// Wrapped in wrapAsync to handle async errors (previously this was a plain async function with no error handling)
+router.get("/search", wrapAsync(async (req, res) => {
     const { q } = req.query;
 
     if (!q) {
@@ -52,9 +53,14 @@ const listings = await Listing.find({
     ]
 });
 
+    // Build wishlistSet so heart icons render correctly on search results too.
+    // Without this, the template would crash because wishlistSet would be undefined.
+    const wishlistSet = new Set(
+        req.user ? req.user.wishlist.map(id => id.toString()) : []
+    );
 
-    res.render("listings/index", { allListings: listings });
-});
+    res.render("listings/index", { allListings: listings, wishlistSet });
+}));
 
 
 router.route("/:id")

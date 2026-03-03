@@ -1,0 +1,130 @@
+<!-- Use the shared boilerplate layout (navbar + footer + Bootstrap) -->
+<% layout("/../layouts/boilerplate") %>
+
+<body>
+
+<!-- Page header showing how many listings the user has saved -->
+<div class="row mt-3 mb-2">
+    <div class="col">
+        <h3>My Wishlist
+            <!-- allListings.length = how many items, rendered server-side -->
+            <small class="text-muted fs-6 ms-2"><%= allListings.length %> saved</small>
+        </h3>
+    </div>
+</div>
+
+<!-- Show an empty state if the user hasn't saved any listings yet -->
+<% if(allListings.length === 0) { %>
+    <div class="text-center mt-5">
+        <i class="fa-regular fa-heart fa-3x text-muted mb-3"></i>
+        <p class="text-muted">You haven't saved any listings yet.</p>
+        <!-- Direct the user back to browsing -->
+        <a href="/listings" class="btn btn-dark">Explore listings</a>
+    </div>
+<% } else { %>
+
+<!-- Reuse the exact same responsive grid layout from index.ejs -->
+<div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 mt-3">
+
+    <% for(let listing of allListings){ %>
+        <!-- Clicking anywhere on the card (except the heart button) navigates to the listing detail -->
+        <a href="/listings/<%= listing._id %>" class="listing_link">
+
+            <div class="card col listing-card position-relative"
+                 data-category="<%= listing.category %>">
+                <!-- position-relative anchors the heart button overlay inside the card -->
+
+                <img src="<%= listing.image.url %>"
+                     class="card-img-top"
+                     alt="listing_image"
+                     style="height:200px; object-fit:cover;">
+
+                <!-- Heart button — always SOLID red on this page because every listing here is wishlisted -->
+                <!-- Clicking it will toggle (remove) via AJAX and fade the card out -->
+                <button
+                    class="btn wish-btn position-absolute top-0 end-0 m-2 p-1"
+                    data-listing-id="<%= listing._id %>"
+                    data-wishlisted="true"
+                    aria-label="Remove from wishlist"
+                    title="Remove from wishlist"
+                    style="background:rgba(255,255,255,0.85); border-radius:50%; width:2rem; height:2rem; line-height:1;">
+                    <i class="fa-solid fa-heart text-danger"></i>
+                </button>
+
+                <div class="card-body">
+                    <p class="card-text">
+                        <b><%= listing.title %></b><br>
+                        <!-- Price formatted in Indian number style with Rupee symbol -->
+                        &#8377;<%= listing.price.toLocaleString("en-IN") %> / night
+                    </p>
+                </div>
+
+            </div>
+        </a>
+    <% } %>
+
+</div>
+
+<% } %>
+
+<!-- WISHLIST TOGGLE (AJAX) -->
+<!-- Same AJAX logic as index.ejs but with an extra DOM card-removal step when a listing is unsaved -->
+<script>
+    // Grab the navbar badge to update its count live after toggling
+    const wishlistBadge = document.getElementById("wishlist-badge");
+
+    // Attach the click handler to all heart buttons rendered on this page
+    document.querySelectorAll(".wish-btn").forEach(function(btn) {
+        btn.addEventListener("click", function(e) {
+            e.preventDefault();     // Don't submit a form
+            e.stopPropagation();    // Don't trigger the parent <a> navigation
+
+            const listingId = this.dataset.listingId;
+
+            // We need the parent <a.listing_link> element to remove the whole card from the DOM
+            const card = this.closest(".listing_link");
+
+            // Send AJAX POST to the toggle endpoint
+            fetch("/wishlist/" + listingId + "/toggle", {
+                method: "POST",
+                headers: { "X-Requested-With": "XMLHttpRequest" }, // Tells server to return JSON, not redirect
+                credentials: "same-origin"                          // Include session cookie for auth
+            })
+            .then(function(r) {
+                // If session expired, the server redirects to /login — follow it
+                if (r.redirected) { window.location.href = "/login"; return null; }
+                return r.json();
+            })
+            .then(function(data) {
+                if (!data) return;
+
+                // On the wishlist page, toggling always means REMOVING (since all cards here are already saved).
+                // Fade the card out and then remove it from the DOM after the CSS transition.
+                if (!data.wishlisted && card) {
+                    card.style.transition = "opacity 0.3s"; // smooth fade-out
+                    card.style.opacity = "0";
+                    setTimeout(function() {
+                        card.remove(); // remove the card element from the page
+                        // Update the "X saved" count in the page header
+                        const header = document.querySelector("h3 small");
+                        if (header) {
+                            const remaining = document.querySelectorAll(".listing_link").length;
+                            header.textContent = remaining + " saved";
+                            // If no cards remain, reload to show the empty state UI
+                            if (remaining === 0) location.reload();
+                        }
+                    }, 300); // wait 300ms to match the CSS transition duration
+                }
+
+                // Update the navbar badge count and hide it if it hits 0
+                if (wishlistBadge) {
+                    wishlistBadge.textContent = data.wishlistCount;
+                    wishlistBadge.classList.toggle("d-none", data.wishlistCount === 0);
+                }
+            })
+            .catch(function(err) { console.error("Wishlist toggle failed:", err); });
+        });
+    });
+</script>
+
+</body>
