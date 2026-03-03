@@ -3,7 +3,24 @@ const Review = require("../models/review");
 
 
 module.exports.createReview = async (req, res) => {
-        let listing = await Listing.findById(req.params.id)
+        let listing = await Listing.findById(req.params.id);
+
+        // Block duplicate reviews: check if this user has already reviewed this listing
+        const existingReview = await Review.findOne({
+            _id: { $in: listing.reviews },
+            author: req.user._id
+        });
+        if (existingReview) {
+            req.flash("error", "You have already reviewed this listing.");
+            return res.redirect(`/listings/${req.params.id}`);
+        }
+
+        // Also block the listing owner from reviewing their own listing
+        if (listing.owner.equals(req.user._id)) {
+            req.flash("error", "You cannot review your own listing.");
+            return res.redirect(`/listings/${req.params.id}`);
+        }
+
         let newreview = new Review(req.body.review);
         newreview.author = req.user._id;
         listing.reviews.push(newreview);
