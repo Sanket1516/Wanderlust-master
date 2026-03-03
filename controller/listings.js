@@ -5,19 +5,43 @@ const mbxGeocoding = require('@mapbox/mapbox-sdk/services/geocoding');
 const mapToken = process.env.MAPBOX_TOKEN;
 const geocodingClient = mbxGeocoding({ accessToken: mapToken });//we have now created a box which will allow us to do the geocoding stuff and also oythers in mapbox if we want
 
-module.exports.index = async (req, res,next) => {
-        const allListings = await Listing.find({}); // Fetch all listings from the database
+module.exports.index = async (req, res, next) => {
+        const { minPrice, maxPrice, country, category, sort } = req.query;
+
+        // Build dynamic MongoDB filter from query params
+        let filter = {};
+
+        // Price range
+        if (minPrice || maxPrice) {
+            filter.price = {};
+            if (minPrice && !isNaN(minPrice)) filter.price.$gte = Number(minPrice);
+            if (maxPrice && !isNaN(maxPrice)) filter.price.$lte = Number(maxPrice);
+        }
+
+        // Country filter (partial, case-insensitive)
+        if (country && country.trim()) {
+            filter.country = { $regex: country.trim(), $options: "i" };
+        }
+
+        // Category filter (exact match; "All" means no filter)
+        if (category && category !== "All") {
+            filter.category = category;
+        }
+
+        // Sort option
+        let sortOption = {};
+        if (sort === "price_asc")       sortOption = { price:  1 };
+        else if (sort === "price_desc") sortOption = { price: -1 };
+        else if (sort === "newest")     sortOption = { _id:   -1 };
+
+        const allListings = await Listing.find(filter).sort(sortOption);
 
         // Build a JavaScript Set of the logged-in user's wishlisted listing IDs (as strings).
-        // Using a Set gives O(1) lookup time in the EJS template (wishlistSet.has(id)).
-        // If no user is logged in, the Set is empty — no heart buttons will be filled.
-        // req.user.wishlist contains ObjectIds, so we call .toString() on each for string comparison.
         const wishlistSet = new Set(
             req.user ? req.user.wishlist.map(id => id.toString()) : []
         );
 
-        // Pass wishlistSet alongside allListings so the template can render filled/outline hearts
-        res.render("listings/index.ejs", { allListings, wishlistSet }); // Render the index page with all listings
+        res.render("listings/index.ejs", { allListings, wishlistSet, filters: req.query });
         return;
 };
 

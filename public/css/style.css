@@ -1013,3 +1013,89 @@ body {
     .admin-sidebar { display: none; }
     .admin-main    { padding: 1.2rem; }
 }
+
+/* ─── Advanced Filters ───────────────────────────────────────────── */
+
+.adv-filter-toolbar {
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 0.6rem;
+}
+
+.result-count {
+    font-size: 0.82rem;
+    letter-spacing: 0.01em;
+}
+
+.filter-chip {
+    display: inline-flex;
+    align-items: center;
+    background: #fff0f1;
+    color: #fe424d;
+    border: 1px solid #ffd0d3;
+    border-radius: 999px;
+    padding: 0.18rem 0.65rem;
+    font-size: 0.77rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.filter-clear-btn {
+    display: inline-flex;
+    align-items: center;
+    color: #fe424d;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 0.18rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid #ffd0d3;
+    transition: background 0.15s;
+}
+.filter-clear-btn:hover {
+    background: #fff0f1;
+    color: #fe424d;
+}
+
+.adv-filter-toggle {
+    border: 1.5px solid #dee2e6;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 0.25rem 0.85rem;
+    color: #555;
+    background: #fff;
+    transition: background 0.15s, border-color 0.15s;
+}
+.adv-filter-toggle:hover,
+.adv-filter-toggle.active {
+    background: #1a1a2e;
+    border-color: #1a1a2e;
+    color: #fff;
+}
+
+.adv-filter-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    background: #fe424d;
+    border-radius: 50%;
+    vertical-align: middle;
+    margin-left: 2px;
+}
+
+.adv-filter-form {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.4rem;
+}
+
+.adv-filter-form .form-label {
+    font-size: 0.77rem;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
