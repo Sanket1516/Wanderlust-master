@@ -84,7 +84,14 @@
 <div class="adv-filter-toolbar d-flex align-items-center flex-wrap gap-2 mt-3 mb-1">
     <!-- Result count -->
     <span class="result-count text-muted small">
-        <b><%= allListings.length %></b> listing<%= allListings.length !== 1 ? 's' : '' %>
+        <% if(pagination && pagination.totalPages > 1) {
+            const from = (pagination.currentPage - 1) * pagination.LIMIT + 1;
+            const to   = Math.min(pagination.currentPage * pagination.LIMIT, pagination.totalCount);
+        %>
+        Showing <b><%= from %>–<%= to %></b> of <b><%= pagination.totalCount %></b> listing<%= pagination.totalCount !== 1 ? 's' : '' %>
+        <% } else { %>
+        <b><%= pagination ? pagination.totalCount : allListings.length %></b> listing<%= (pagination ? pagination.totalCount : allListings.length) !== 1 ? 's' : '' %>
+        <% } %>
     </span>
 
     <!-- Active filter chips -->
@@ -223,6 +230,72 @@
     <% } %>
 
 </div>
+
+<!-- =====================================================================
+     PAGINATION
+     Only renders when there is more than one page of results.
+     The `pagination` object is passed from controller/listings.js and contains:
+       - currentPage  : the active page number (1-based)
+       - totalPages   : total number of pages based on LIMIT and totalCount
+       - totalCount   : total listings matching the current filters
+       - LIMIT        : how many listings are shown per page (12)
+       - pageNumbers  : pre-built array like [1, 2, 3] or [1, '...', 4, 5, 6, '...', 12]
+                        computed in the controller to keep EJS logic minimal
+     pagination is null on the /search route, so the whole block is safely skipped.
+     ===================================================================== -->
+<% if(pagination && pagination.totalPages > 1) { %>
+<%
+    // pageUrl(n) — builds a full query string for page n while keeping
+    // all currently active filter params (minPrice, maxPrice, country, sort, category).
+    // This ensures that navigating between pages never loses the user's filter state.
+    // URLSearchParams is available server-side in Node.js (global since v10).
+    function pageUrl(pageNum) {
+        const p = new URLSearchParams();
+        if (filters.minPrice)  p.set("minPrice",  filters.minPrice);
+        if (filters.maxPrice)  p.set("maxPrice",  filters.maxPrice);
+        if (filters.country)   p.set("country",   filters.country);
+        if (filters.sort)      p.set("sort",      filters.sort);
+        if (filters.category)  p.set("category",  filters.category);
+        p.set("page", pageNum);
+        return "/listings?" + p.toString();
+    }
+%>
+<nav class="pagination-wrap" aria-label="Listings pagination">
+
+    <!-- Prev button: disabled (pointer-events: none + opacity) when on page 1 -->
+    <a href="<%= pageUrl(pagination.currentPage - 1) %>"
+       class="page-btn page-prev <%= pagination.currentPage === 1 ? 'disabled' : '' %>"
+       aria-label="Previous page">
+        <i class="fa-solid fa-chevron-left"></i>
+    </a>
+
+    <!-- Page number buttons
+         pagination.pageNumbers is an array of integers and "..." strings.
+         Example for 12 pages on page 5: [1, '...', 4, 5, 6, '...', 12]
+         "..." entries render as a non-clickable ellipsis span.
+         The active page gets the .active class (dark background, no pointer events). -->
+    <% for(let p of pagination.pageNumbers) { %>
+        <% if(p === "...") { %>
+        <span class="page-ellipsis">…</span>
+        <% } else { %>
+        <a href="<%= pageUrl(p) %>"
+           class="page-btn <%= p === pagination.currentPage ? 'active' : '' %>"
+           aria-label="Page <%= p %>"
+           aria-current="<%= p === pagination.currentPage ? 'page' : '' %>">
+            <%= p %>
+        </a>
+        <% } %>
+    <% } %>
+
+    <!-- Next button: disabled when already on the last page -->
+    <a href="<%= pageUrl(pagination.currentPage + 1) %>"
+       class="page-btn page-next <%= pagination.currentPage === pagination.totalPages ? 'disabled' : '' %>"
+       aria-label="Next page">
+        <i class="fa-solid fa-chevron-right"></i>
+    </a>
+
+</nav>
+<% } %>
 
 <!-- TAX TOGGLE -->
 <script>

@@ -1245,3 +1245,76 @@ body {
     color: #888;
     font-size: 0.77rem;
 }
+
+/* ─── Pagination ─────────────────────────────────────────────────── */
+
+.pagination-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    margin: 2.5rem 0 1.5rem;
+    flex-wrap: wrap;
+}
+
+.page-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.2rem;
+    height: 2.2rem;
+    padding: 0 0.55rem;
+    border-radius: 50%;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #222;
+    text-decoration: none;
+    background: transparent;
+    border: 1.5px solid transparent;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    line-height: 1;
+}
+
+.page-btn:hover:not(.active):not(.disabled) {
+    background: #f0f0f0;
+    border-color: #ddd;
+    color: #222;
+}
+
+.page-btn.active {
+    background: #222222;
+    color: #fff;
+    border-color: #222222;
+    pointer-events: none;
+}
+
+.page-btn.disabled {
+    opacity: 0.35;
+    pointer-events: none;
+    cursor: default;
+}
+
+.page-btn.page-prev,
+.page-btn.page-next {
+    border: 1.5px solid #ddd;
+    background: #fff;
+    font-size: 0.75rem;
+}
+
+.page-btn.page-prev:hover:not(.disabled),
+.page-btn.page-next:hover:not(.disabled) {
+    background: #fe424d;
+    border-color: #fe424d;
+    color: #fff;
+}
+
+.page-ellipsis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.2rem;
+    height: 2.2rem;
+    color: #aaa;
+    font-size: 0.9rem;
+    pointer-events: none;
+}

@@ -59,7 +59,7 @@ const listings = await Listing.find({
         req.user ? req.user.wishlist.map(id => id.toString()) : []
     );
 
-    res.render("listings/index", { allListings: listings, wishlistSet, filters: {} });
+    res.render("listings/index", { allListings: listings, wishlistSet, filters: {}, pagination: null });
 }));
 
 

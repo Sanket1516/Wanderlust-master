@@ -6,7 +6,7 @@ const mapToken = process.env.MAPBOX_TOKEN;
 const geocodingClient = mbxGeocoding({ accessToken: mapToken });//we have now created a box which will allow us to do the geocoding stuff and also oythers in mapbox if we want
 
 module.exports.index = async (req, res, next) => {
-        const { minPrice, maxPrice, country, category, sort } = req.query;
+        const { minPrice, maxPrice, country, category, sort, page } = req.query;
 
         // Build dynamic MongoDB filter from query params
         let filter = {};
@@ -34,14 +34,43 @@ module.exports.index = async (req, res, next) => {
         else if (sort === "price_desc") sortOption = { price: -1 };
         else if (sort === "newest")     sortOption = { _id:   -1 };
 
-        const allListings = await Listing.find(filter).sort(sortOption);
+        // Pagination
+        const LIMIT       = 12;
+        const currentPage = Math.max(1, parseInt(page) || 1);
+        const totalCount  = await Listing.countDocuments(filter);
+        const totalPages  = Math.ceil(totalCount / LIMIT) || 1;
+        const safePage    = Math.min(currentPage, totalPages);
+
+        const allListings = await Listing.find(filter)
+            .sort(sortOption)
+            .skip((safePage - 1) * LIMIT)
+            .limit(LIMIT);
+
+        // Build page-number array for the template (e.g. [1, '...', 4, 5, 6, '...', 12])
+        const pageNumbers = [];
+        if (totalPages <= 7) {
+            for (let i = 1; i <= totalPages; i++) pageNumbers.push(i);
+        } else {
+            pageNumbers.push(1);
+            if (safePage > 3)             pageNumbers.push("...");
+            const start = Math.max(2, safePage - 1);
+            const end   = Math.min(totalPages - 1, safePage + 1);
+            for (let i = start; i <= end; i++) pageNumbers.push(i);
+            if (safePage < totalPages - 2) pageNumbers.push("...");
+            pageNumbers.push(totalPages);
+        }
 
         // Build a JavaScript Set of the logged-in user's wishlisted listing IDs (as strings).
         const wishlistSet = new Set(
             req.user ? req.user.wishlist.map(id => id.toString()) : []
         );
 
-        res.render("listings/index.ejs", { allListings, wishlistSet, filters: req.query });
+        res.render("listings/index.ejs", {
+            allListings,
+            wishlistSet,
+            filters: req.query,
+            pagination: { currentPage: safePage, totalPages, totalCount, LIMIT, pageNumbers }
+        });
         return;
 };
 
