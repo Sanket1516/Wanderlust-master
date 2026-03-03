@@ -95,6 +95,8 @@ if(process.env.NODE_ENV !== "production"){
     const usersRouter = require("./routes/user.js");
     // Wishlist router handles GET /wishlist (My Wishlist page) and POST /wishlist/:id/toggle (add/remove)
     const wishlistRouter = require("./routes/wishlist.js");
+    // Booking router handles GET /bookings, POST /listings/:id/book, DELETE /bookings/:id
+    const bookingRouter = require("./routes/booking.js");
 
     const sessionOptions = {
         secret : "Mysupersecretcode",
@@ -156,6 +158,8 @@ if(process.env.NODE_ENV !== "production"){
     app.use("/", usersRouter);
     // Mount the wishlist router at root "/" so its routes resolve as /wishlist and /wishlist/:id/toggle
     app.use("/", wishlistRouter);
+    // Mount the booking router at root "/" so its routes resolve as /bookings and /listings/:id/book
+    app.use("/", bookingRouter);
 
     // ===============================================
     // 6. Error Handling Middleware

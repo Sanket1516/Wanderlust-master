@@ -1,0 +1,113 @@
+<% layout("/../layouts/boilerplate") %>
+
+<body>
+<div class="row mt-4 mb-5">
+    <div class="col-10 offset-1">
+
+        <!-- Page header -->
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div>
+                <h3 class="fw-bold mb-0">My Bookings</h3>
+                <p class="text-muted mb-0" style="font-size:0.9rem;"><%= bookings.length %> booking<%= bookings.length !== 1 ? 's' : '' %></p>
+            </div>
+            <a href="/listings" class="btn btn-outline-dark btn-sm">
+                <i class="fa-solid fa-compass me-1"></i> Explore Listings
+            </a>
+        </div>
+
+        <!-- Empty state -->
+        <% if(bookings.length === 0) { %>
+        <div class="text-center mt-5 py-5">
+            <i class="fa-regular fa-calendar-xmark fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted fw-normal">No bookings yet</h5>
+            <p class="text-muted" style="font-size:0.9rem;">You haven't booked any place yet. Start exploring!</p>
+            <a href="/listings" class="btn btn-add mt-2">
+                <i class="fa-solid fa-binoculars me-1"></i> Find a place to stay
+            </a>
+        </div>
+        <% } else { %>
+
+        <!-- Booking cards -->
+        <div class="row g-4">
+            <% for(let booking of bookings) { %>
+            <div class="col-12">
+                <div class="booking-card">
+                    <div class="d-flex flex-md-row flex-column gap-3">
+
+                        <!-- Listing thumbnail -->
+                        <a href="/listings/<%= booking.listing._id %>" class="booking-thumb-link">
+                            <img
+                                src="<%= booking.listing.image.url %>"
+                                alt="<%= booking.listing.title %>"
+                                class="booking-thumb">
+                        </a>
+
+                        <!-- Booking details -->
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-start justify-content-between flex-wrap gap-2">
+                                <div>
+                                    <a href="/listings/<%= booking.listing._id %>" class="booking-title-link">
+                                        <h5 class="fw-bold mb-1"><%= booking.listing.title %></h5>
+                                    </a>
+                                    <p class="text-muted mb-2" style="font-size:0.85rem;">
+                                        <i class="fa-solid fa-location-dot me-1 text-danger"></i>
+                                        <%= booking.listing.location %>, <%= booking.listing.country %>
+                                    </p>
+                                </div>
+                                <!-- Status badge -->
+                                <span class="booking-status-badge booking-status-<%= booking.status %>">
+                                    <% if(booking.status === 'confirmed') { %>
+                                    <i class="fa-solid fa-circle-check me-1"></i> Confirmed
+                                    <% } else { %>
+                                    <i class="fa-solid fa-circle-xmark me-1"></i> Cancelled
+                                    <% } %>
+                                </span>
+                            </div>
+
+                            <!-- Date + price info -->
+                            <div class="booking-info-grid">
+                                <div class="booking-info-item">
+                                    <span class="booking-info-label">Check-in</span>
+                                    <span class="booking-info-value">
+                                        <%= booking.checkIn.toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" }) %>
+                                    </span>
+                                </div>
+                                <div class="booking-info-item">
+                                    <span class="booking-info-label">Check-out</span>
+                                    <span class="booking-info-value">
+                                        <%= booking.checkOut.toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" }) %>
+                                    </span>
+                                </div>
+                                <div class="booking-info-item">
+                                    <span class="booking-info-label">Duration</span>
+                                    <span class="booking-info-value">
+                                        <%= booking.totalNights %> night<%= booking.totalNights > 1 ? 's' : '' %>
+                                    </span>
+                                </div>
+                                <div class="booking-info-item">
+                                    <span class="booking-info-label">Total paid</span>
+                                    <span class="booking-info-value fw-bold text-danger">
+                                        &#8377;&nbsp;<%= booking.totalPrice.toLocaleString("en-IN") %>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Cancel button — only for confirmed future bookings -->
+                            <% if(booking.status === 'confirmed' && booking.checkIn > new Date()) { %>
+                            <form method="post" action="/bookings/<%= booking._id %>?_method=DELETE" class="mt-3 d-inline">
+                                <button class="btn btn-cancel-booking" onclick="return confirm('Are you sure you want to cancel this booking?')">
+                                    <i class="fa-solid fa-ban me-1"></i> Cancel Booking
+                                </button>
+                            </form>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <% } %>
+        </div>
+
+        <% } %>
+    </div>
+</div>
+</body>

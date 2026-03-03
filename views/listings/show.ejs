@@ -1,153 +1,237 @@
-<!-- applying the ejs mate boilerplate to this file -->
-<% layout("/../layouts/boilerplate") %>
-<body>
-    <script>
-        const mapToken = '<%= process.env.MAPBOX_TOKEN %>';
-        const coordinates = <%-JSON.stringify(data.geometry.coordinates) %>;
-    </script>
+    <!-- applying the ejs mate boilerplate to this file -->
+    <% layout("/../layouts/boilerplate") %>
+    <body>
+        <script>
+            const mapToken = '<%= process.env.MAPBOX_TOKEN %>';
+            const coordinates = <%-JSON.stringify(data.geometry.coordinates) %>;
+        </script>
 
-    <div class="row mt-4 mb-2">
-        <!-- Title + Save button row -->
-        <div class="col-10 offset-1 d-flex align-items-center gap-3 mb-3">
-            <h2 class="mb-0 fw-bold"><%=data.title%></h2>
-            <% if(currUser) { %>
-            <%
-                const isWishlisted = wishlistSet.has(data._id.toString());
-            %>
-            <form action="/wishlist/<%= data._id %>/toggle" method="POST" class="d-inline">
-                <button type="submit"
-                    <% /* Change button style based on wishlist state */ %>
-                    class="btn btn-sm <%= isWishlisted ? 'btn-danger' : 'btn-outline-danger' %>"
-                    title="<%= isWishlisted ? 'Remove from wishlist' : 'Save to wishlist' %>">
-                    <i class="<%= isWishlisted ? 'fa-solid fa-heart' : 'fa-regular fa-heart' %>"></i>
-                    <%= isWishlisted ? 'Saved' : 'Save' %>
-                </button>
-            </form>
-            <% } %>
-        </div>
+        <div class="row mt-4 mb-2">
+            <!-- Title + Save button row -->
+            <div class="col-10 offset-1 d-flex align-items-center gap-3 mb-3">
+                <h2 class="mb-0 fw-bold"><%=data.title%></h2>
+                <% if(currUser) { %>
+                <%
+                    const isWishlisted = wishlistSet.has(data._id.toString());
+                %>
+                <form action="/wishlist/<%= data._id %>/toggle" method="POST" class="d-inline">
+                    <button type="submit"
+                        <% /* Change button style based on wishlist state */ %>
+                        class="btn btn-sm <%= isWishlisted ? 'btn-danger' : 'btn-outline-danger' %>"
+                        title="<%= isWishlisted ? 'Remove from wishlist' : 'Save to wishlist' %>">
+                        <i class="<%= isWishlisted ? 'fa-solid fa-heart' : 'fa-regular fa-heart' %>"></i>
+                        <%= isWishlisted ? 'Saved' : 'Save' %>
+                    </button>
+                </form>
+                <% } %>
+            </div>
 
-        <!-- Hero image -->
-        <div class="col-10 offset-1 mb-4">
-            <img src="<%=data.image.url%>" class="show-hero" alt="<%=data.title%>">
-        </div>
+            <!-- Hero image -->
+            <div class="col-10 offset-1 mb-4">
+                <img src="<%=data.image.url%>" class="show-hero" alt="<%=data.title%>">
+            </div>
 
-        <!-- Info card -->
-        <div class="col-10 offset-1 mb-4">
-            <div class="show-info-card">
-                <!-- Owner -->
-                <div class="info-row">
-                    <i class="fa-solid fa-user info-icon"></i>
-                    <div>
-                        <span class="info-label">Hosted by</span>
-                        <span class="info-value"><%= data.owner.username %></span>
+            <!-- Info card -->
+            <div class="col-10 offset-1 mb-4">
+                <div class="show-info-card">
+                    <!-- Owner -->
+                    <div class="info-row">
+                        <i class="fa-solid fa-user info-icon"></i>
+                        <div>
+                            <span class="info-label">Hosted by</span>
+                            <span class="info-value"><%= data.owner.username %></span>
+                        </div>
+                    </div>
+                    <!-- Description -->
+                    <div class="info-row">
+                        <i class="fa-solid fa-align-left info-icon"></i>
+                        <div>
+                            <span class="info-label">About this place</span>
+                            <span class="info-value"><%=data.description%></span>
+                        </div>
+                    </div>
+                    <!-- Price -->
+                    <div class="info-row">
+                        <i class="fa-solid fa-tag info-icon"></i>
+                        <div>
+                            <span class="info-label">Price per night</span>
+                            <span class="price-badge">&#8377; <%=data.price.toLocaleString("en-IN")%></span>
+                        </div>
+                    </div>
+                    <!-- Location -->
+                    <div class="info-row">
+                        <i class="fa-solid fa-location-dot info-icon"></i>
+                        <div>
+                            <span class="info-label">Location</span>
+                            <span class="info-value"><%=data.location%>, <%=data.country%></span>
+                        </div>
+                    </div>
+
+                    <!-- Edit / Delete buttons -->
+                    <div class="show-actions">
+                        <a href="/listings/<%=data._id%>/edit" class="btn-edit">
+                            <i class="fa-solid fa-pen"></i> Edit
+                        </a>
+                        <form method="post" action="/listings/<%=data._id%>?_method=DELETE" class="d-inline">
+                            <button class="btn-delete">
+                                <i class="fa-solid fa-trash"></i> Delete
+                            </button>
+                        </form>
                     </div>
                 </div>
-                <!-- Description -->
-                <div class="info-row">
-                    <i class="fa-solid fa-align-left info-icon"></i>
-                    <div>
-                        <span class="info-label">About this place</span>
-                        <span class="info-value"><%=data.description%></span>
-                    </div>
-                </div>
-                <!-- Price -->
-                <div class="info-row">
-                    <i class="fa-solid fa-tag info-icon"></i>
-                    <div>
-                        <span class="info-label">Price per night</span>
-                        <span class="price-badge">&#8377; <%=data.price.toLocaleString("en-IN")%></span>
-                    </div>
-                </div>
-                <!-- Location -->
-                <div class="info-row">
-                    <i class="fa-solid fa-location-dot info-icon"></i>
-                    <div>
-                        <span class="info-label">Location</span>
-                        <span class="info-value"><%=data.location%>, <%=data.country%></span>
-                    </div>
-                </div>
+            </div>
 
-                <!-- Edit / Delete buttons -->
-                <div class="show-actions">
-                    <a href="/listings/<%=data._id%>/edit" class="btn-edit">
-                        <i class="fa-solid fa-pen"></i> Edit
-                    </a>
-                    <form method="post" action="/listings/<%=data._id%>?_method=DELETE" class="d-inline">
-                        <button class="btn-delete">
-                            <i class="fa-solid fa-trash"></i> Delete
+            <!-- Booking panel — shown to logged-in users who are NOT the owner -->
+            <% if(currUser && !data.owner._id.equals(currUser._id)) { %>
+            <div class="col-10 offset-1 mb-4">
+                <div class="booking-panel">
+                    <h5 class="fw-bold mb-1">
+                        <i class="fa-solid fa-calendar-days me-2 text-danger"></i>Reserve your stay
+                    </h5>
+                    <p class="booking-panel-price mb-3">
+                        <span class="price-badge">&#8377; <%= data.price.toLocaleString("en-IN") %></span>
+                        <span class="text-muted ms-2" style="font-size:0.9rem;">/ night</span>
+                    </p>
+                    <form action="/listings/<%= data._id %>/book" method="POST" class="needs-validation" novalidate id="booking-form">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="checkIn" class="form-label">Check-in</label>
+                                <input type="date" id="checkIn" name="booking[checkIn]" class="form-control" required>
+                                <div class="invalid-feedback">Please select a check-in date.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="checkOut" class="form-label">Check-out</label>
+                                <input type="date" id="checkOut" name="booking[checkOut]" class="form-control" required>
+                                <div class="invalid-feedback">Please select a check-out date.</div>
+                            </div>
+                        </div>
+                        <!-- Live price summary — updates as user picks dates -->
+                        <div id="booking-summary" class="booking-summary d-none mt-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span id="summary-nights" class="text-muted" style="font-size:0.9rem;"></span>
+                                <span id="summary-total" class="fw-bold text-danger fs-5"></span>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-add w-100 mt-3">
+                            <i class="fa-solid fa-bolt me-1"></i> Book Now
                         </button>
                     </form>
                 </div>
             </div>
-        </div>
-
-        <!-- Reviews section -->
-        <div class="col-10 offset-1 mb-4">
-            <!-- Leave a review form -->
-            <% if(currUser){ %>
-            <div class="review-form-card mb-4">
-                <h5 class="fw-bold mb-3">Leave a Review</h5>
-                <form action="/listings/<%= data._id %>/reviews" method="post" class="needs-validation" novalidate>
-                    <div class="mb-3">
-                        <label for="rating" class="form-label">Rating</label>
-                        <fieldset class="starability-slot">
-                            <input type="radio" id="no-rate" class="input-no-rate" name="review[rating]" value="1" checked aria-label="No rating." />
-                            <input type="radio" id="first-rate1" name="review[rating]" value="1" />
-                            <label for="first-rate1" title="Terrible">1 star</label>
-                            <input type="radio" id="first-rate2" name="review[rating]" value="2" />
-                            <label for="first-rate2" title="Not good">2 stars</label>
-                            <input type="radio" id="first-rate3" name="review[rating]" value="3" />
-                            <label for="first-rate3" title="Average">3 stars</label>
-                            <input type="radio" id="first-rate4" name="review[rating]" value="4" />
-                            <label for="first-rate4" title="Very good">4 stars</label>
-                            <input type="radio" id="first-rate5" name="review[rating]" value="5" />
-                            <label for="first-rate5" title="Amazing">5 stars</label>
-                        </fieldset>
-                    </div>
-                    <div class="mb-3">
-                        <label for="comment" class="form-label">Comment</label>
-                        <textarea name="review[comment]" id="comment" rows="4" class="form-control" required placeholder="Share your experience..."></textarea>
-                        <div class="invalid-feedback">Please add some comments for the review</div>
-                    </div>
-                    <button class="btn btn-outline-dark">Submit Review</button>
-                </form>
-            </div>
             <% } %>
 
-            <!-- All reviews -->
-            <% if(data.reviews.length > 0){ %>
-            <h5 class="fw-bold mb-3">All Reviews <span class="text-muted fw-normal fs-6">(<%= data.reviews.length %>)</span></h5>
-            <div class="row g-3">
-                <% for(review of data.reviews) { %>
-                <div class="col-md-6">
-                    <div class="review-card">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <div class="fw-bold">@<%= review.author.username %></div>
-                                <p class="starability-result mb-1" data-rating="<%= review.rating %>">
-                                    Rated: <%= review.rating %> stars
-                                </p>
-                            </div>
-                            <form method="post" action="/listings/<%= data._id %>/reviews/<%= review._id %>?_method=DELETE">
-                                <button class="btn-delete-review">
-                                    <i class="fa-solid fa-xmark"></i> Delete
-                                </button>
-                            </form>
+            <!-- Reviews section -->
+            <div class="col-10 offset-1 mb-4">
+                <!-- Leave a review form -->
+                <% if(currUser){ %>
+                <div class="review-form-card mb-4">
+                    <h5 class="fw-bold mb-3">Leave a Review</h5>
+                    <form action="/listings/<%= data._id %>/reviews" method="post" class="needs-validation" novalidate>
+                        <div class="mb-3">
+                            <label for="rating" class="form-label">Rating</label>
+                            <fieldset class="starability-slot">
+                                <input type="radio" id="no-rate" class="input-no-rate" name="review[rating]" value="1" checked aria-label="No rating." />
+                                <input type="radio" id="first-rate1" name="review[rating]" value="1" />
+                                <label for="first-rate1" title="Terrible">1 star</label>
+                                <input type="radio" id="first-rate2" name="review[rating]" value="2" />
+                                <label for="first-rate2" title="Not good">2 stars</label>
+                                <input type="radio" id="first-rate3" name="review[rating]" value="3" />
+                                <label for="first-rate3" title="Average">3 stars</label>
+                                <input type="radio" id="first-rate4" name="review[rating]" value="4" />
+                                <label for="first-rate4" title="Very good">4 stars</label>
+                                <input type="radio" id="first-rate5" name="review[rating]" value="5" />
+                                <label for="first-rate5" title="Amazing">5 stars</label>
+                            </fieldset>
                         </div>
-                        <p class="mb-0 mt-1" style="color:#444; font-size:0.92rem;"><%= review.comment %></p>
+                        <div class="mb-3">
+                            <label for="comment" class="form-label">Comment</label>
+                            <textarea name="review[comment]" id="comment" rows="4" class="form-control" required placeholder="Share your experience..."></textarea>
+                            <div class="invalid-feedback">Please add some comments for the review</div>
+                        </div>
+                        <button class="btn btn-outline-dark">Submit Review</button>
+                    </form>
+                </div>
+                <% } %>
+
+                <!-- All reviews -->
+                <% if(data.reviews.length > 0){ %>
+                <h5 class="fw-bold mb-3">All Reviews <span class="text-muted fw-normal fs-6">(<%= data.reviews.length %>)</span></h5>
+                <div class="row g-3">
+                    <% for(review of data.reviews) { %>
+                    <div class="col-md-6">
+                        <div class="review-card">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="fw-bold">@<%= review.author.username %></div>
+                                    <p class="starability-result mb-1" data-rating="<%= review.rating %>">
+                                        Rated: <%= review.rating %> stars
+                                    </p>
+                                </div>
+                                <form method="post" action="/listings/<%= data._id %>/reviews/<%= review._id %>?_method=DELETE">
+                                    <button class="btn-delete-review">
+                                        <i class="fa-solid fa-xmark"></i> Delete
+                                    </button>
+                                </form>
+                            </div>
+                            <p class="mb-0 mt-1" style="color:#444; font-size:0.92rem;"><%= review.comment %></p>
+                        </div>
                     </div>
+                    <% } %>
                 </div>
                 <% } %>
             </div>
-            <% } %>
+
+            <!-- Map section -->
+            <div class="col-10 offset-1 mb-5">
+                <h5 class="fw-bold mb-3"><i class="fa-solid fa-map-location-dot text-danger me-2"></i>Where you can find this place</h5>
+                <div id="map"></div>
+            </div>
         </div>
 
-        <!-- Map section -->
-        <div class="col-10 offset-1 mb-5">
-            <h5 class="fw-bold mb-3"><i class="fa-solid fa-map-location-dot text-danger me-2"></i>Where you can find this place</h5>
-            <div id="map"></div>
-        </div>
-    </div>
+        <script src="/js/map.js"></script>
+        <!-- Booking panel: set min dates and live price calculation -->
+        <script>
+            (function() {
+                const checkInInput  = document.getElementById("checkIn");
+                const checkOutInput = document.getElementById("checkOut");
+                const summaryBox    = document.getElementById("booking-summary");
+                const summaryNights = document.getElementById("summary-nights");
+                const summaryTotal  = document.getElementById("summary-total");
+                const pricePerNight = <%= data.price %>;
 
-    <script src="/js/map.js"></script>
-</body>
+                if (!checkInInput) return; // booking panel not rendered (owner / logged-out)
+
+                // Set minimum selectable date to today
+                const todayStr = new Date().toISOString().split("T")[0];
+                checkInInput.min  = todayStr;
+                checkOutInput.min = todayStr;
+
+                function updateSummary() {
+                    const ci = checkInInput.value;
+                    const co = checkOutInput.value;
+                    if (!ci || !co) { summaryBox.classList.add("d-none"); return; }
+                    const msPerDay = 1000 * 60 * 60 * 24;
+                    const nights = Math.round((new Date(co) - new Date(ci)) / msPerDay);
+                    if (nights <= 0) { summaryBox.classList.add("d-none"); return; }
+                    const total = nights * pricePerNight;
+                    summaryNights.textContent = nights + " night" + (nights > 1 ? "s" : "");
+                    summaryTotal.textContent  = "₹" + total.toLocaleString("en-IN");
+                    summaryBox.classList.remove("d-none");
+                }
+
+                checkInInput.addEventListener("change", function() {
+                    // Push check-out minimum one day ahead of check-in
+                    const nextDay = new Date(this.value);
+                    nextDay.setDate(nextDay.getDate() + 1);
+                    checkOutInput.min = nextDay.toISOString().split("T")[0];
+                    // Clear check-out if it is now invalid
+                    if (checkOutInput.value && checkOutInput.value <= this.value) {
+                        checkOutInput.value = "";
+                    }
+                    updateSummary();
+                });
+
+                checkOutInput.addEventListener("change", updateSummary);
+            })();
+        </script>
+    </body>
