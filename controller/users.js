@@ -1,4 +1,6 @@
 const User = require("../models/user.js");
+const Listing = require("../models/listing.js");
+const Booking = require("../models/booking.js");
 
 
 module.exports.signup = async (req, res,next)=>{
@@ -52,5 +54,26 @@ module.exports.logout = (req, res, next)=>{
         }
         req.flash("success", "You are logged out");
         res.redirect("/listings");
+    });
+};
+
+module.exports.renderProfile = async (req, res) => {
+    // Fetch user's listings and bookings in parallel to avoid sequential waits
+    const [myListings, myBookings] = await Promise.all([
+        Listing.find({ owner: req.user._id }),
+        Booking.find({ guest: req.user._id }).populate("listing").sort({ createdAt: -1 })
+    ]);
+
+    // Filter out bookings whose listing was deleted (populate returns null)
+    const validBookings = myBookings.filter(b => b.listing);
+
+    // Extract the account creation date from MongoDB ObjectId's embedded timestamp
+    const memberSince = req.user._id.getTimestamp();
+
+    res.render("users/profile.ejs", {
+        user: req.user,
+        myListings,
+        myBookings: validBookings,
+        memberSince
     });
 };

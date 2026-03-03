@@ -1318,3 +1318,291 @@ body {
     font-size: 0.9rem;
     pointer-events: none;
 }
+
+/* ─── Profile Page ───────────────────────────────────────────────── */
+
+.profile-page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+/* Header — avatar + user info */
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.profile-avatar {
+    width: 5.5rem;
+    height: 5.5rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #fe424d, #ff7b54);
+    color: #fff;
+    font-size: 2.2rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 16px rgba(254, 66, 77, 0.25);
+}
+
+.profile-username {
+    font-weight: 800;
+    font-size: 1.4rem;
+    margin-bottom: 0.15rem;
+}
+
+.profile-admin-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    background: #1a1a2e;
+    color: #fff;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    vertical-align: middle;
+    margin-left: 0.4rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.profile-email,
+.profile-since {
+    margin: 0;
+    font-size: 0.88rem;
+    color: #888;
+}
+
+/* Stats row */
+.profile-stats {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2.2rem;
+}
+
+.profile-stat-card {
+    flex: 1;
+    background: #fff;
+    border: 1.5px solid #ebebeb;
+    border-radius: 1rem;
+    padding: 1.1rem 1rem;
+    text-align: center;
+    transition: border-color 0.2s;
+}
+
+.profile-stat-card:hover {
+    border-color: #fe424d;
+}
+
+.profile-stat-icon {
+    font-size: 1.2rem;
+    color: #fe424d;
+    margin-bottom: 0.4rem;
+}
+
+.profile-stat-num {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #222;
+    line-height: 1.1;
+}
+
+.profile-stat-label {
+    font-size: 0.78rem;
+    color: #888;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 0.15rem;
+}
+
+/* Section header */
+.profile-section {
+    margin-bottom: 2rem;
+}
+
+.profile-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 0.6rem;
+}
+
+.profile-section-link {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #fe424d;
+    text-decoration: none;
+}
+
+.profile-section-link:hover {
+    text-decoration: underline;
+}
+
+/* Empty state */
+.profile-empty {
+    text-align: center;
+    padding: 2rem 0;
+}
+
+/* Listings grid */
+.profile-listings-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.profile-listing-card {
+    text-decoration: none;
+    color: inherit;
+    border-radius: 0.85rem;
+    overflow: hidden;
+    border: 1.5px solid #ebebeb;
+    background: #fff;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.profile-listing-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+}
+
+.profile-listing-card img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    display: block;
+}
+
+.profile-listing-info {
+    padding: 0.6rem 0.7rem;
+}
+
+.profile-listing-title {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #222;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 0.15rem;
+}
+
+.profile-listing-meta {
+    font-size: 0.76rem;
+    color: #888;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.profile-listing-meta i {
+    color: #fe424d;
+    font-size: 0.7rem;
+}
+
+/* Bookings list */
+.profile-bookings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.profile-booking-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: #fff;
+    border: 1.5px solid #ebebeb;
+    border-radius: 0.85rem;
+    padding: 0.7rem 1rem;
+    transition: border-color 0.2s;
+}
+
+.profile-booking-row:hover {
+    border-color: #ccc;
+}
+
+.profile-booking-thumb {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 0.6rem;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.profile-booking-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.profile-booking-title {
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: #222;
+    text-decoration: none;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.profile-booking-title:hover {
+    color: #fe424d;
+}
+
+.profile-booking-dates {
+    font-size: 0.78rem;
+    color: #888;
+}
+
+.profile-booking-right {
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.profile-booking-price {
+    display: block;
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: #222;
+}
+
+.profile-booking-status {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.12rem 0.5rem;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.profile-status-confirmed {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.profile-status-cancelled {
+    background: #ffeee9;
+    color: #c62828;
+}
+
+/* Responsive: stack listings grid on small screens */
+@media (max-width: 576px) {
+    .profile-listings-grid {
+        grid-template-columns: 1fr;
+    }
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    .profile-stats {
+        flex-direction: column;
+    }
+}

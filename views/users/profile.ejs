@@ -1,0 +1,113 @@
+<% layout("/../layouts/boilerplate") %>
+
+<body>
+<div class="profile-page">
+
+    <!-- PROFILE HEADER -->
+    <div class="profile-header">
+        <div class="profile-avatar">
+            <%= user.username.charAt(0).toUpperCase() %>
+        </div>
+        <div class="profile-header-info">
+            <h3 class="profile-username">
+                @<%= user.username %>
+                <% if(user.isAdmin) { %>
+                <span class="profile-admin-badge">Admin</span>
+                <% } %>
+            </h3>
+            <p class="profile-email"><i class="fa-regular fa-envelope me-1"></i><%= user.email %></p>
+            <p class="profile-since">
+                <i class="fa-regular fa-calendar me-1"></i>Member since
+                <%= memberSince.toLocaleDateString("en-IN", { month: "long", year: "numeric" }) %>
+            </p>
+        </div>
+    </div>
+
+    <!-- STATS CARDS -->
+    <div class="profile-stats">
+        <div class="profile-stat-card">
+            <div class="profile-stat-icon"><i class="fa-solid fa-house"></i></div>
+            <div class="profile-stat-num"><%= myListings.length %></div>
+            <div class="profile-stat-label">Listing<%= myListings.length !== 1 ? 's' : '' %></div>
+        </div>
+        <div class="profile-stat-card">
+            <div class="profile-stat-icon"><i class="fa-solid fa-suitcase"></i></div>
+            <div class="profile-stat-num"><%= myBookings.length %></div>
+            <div class="profile-stat-label">Booking<%= myBookings.length !== 1 ? 's' : '' %></div>
+        </div>
+        <div class="profile-stat-card">
+            <div class="profile-stat-icon"><i class="fa-solid fa-heart"></i></div>
+            <div class="profile-stat-num"><%= user.wishlist.length %></div>
+            <div class="profile-stat-label">Saved</div>
+        </div>
+    </div>
+
+    <!-- MY LISTINGS -->
+    <div class="profile-section">
+        <div class="profile-section-header">
+            <h5 class="fw-bold mb-0"><i class="fa-solid fa-house me-2"></i>My Listings</h5>
+            <a href="/listings/new" class="profile-section-link">+ Add new</a>
+        </div>
+
+        <% if(myListings.length === 0) { %>
+        <div class="profile-empty">
+            <p class="text-muted mb-1">You haven't created any listings yet.</p>
+            <a href="/listings/new" class="btn btn-sm btn-outline-dark">Create your first listing</a>
+        </div>
+        <% } else { %>
+        <div class="profile-listings-grid">
+            <% for(let listing of myListings) { %>
+            <a href="/listings/<%= listing._id %>" class="profile-listing-card">
+                <img src="<%= listing.image.url %>" alt="<%= listing.title %>" loading="lazy">
+                <div class="profile-listing-info">
+                    <div class="profile-listing-title"><%= listing.title %></div>
+                    <div class="profile-listing-meta">
+                        <i class="fa-solid fa-location-dot"></i> <%= listing.location %>
+                        <span class="ms-2">&#8377;<%= listing.price.toLocaleString("en-IN") %>/night</span>
+                    </div>
+                </div>
+            </a>
+            <% } %>
+        </div>
+        <% } %>
+    </div>
+
+    <!-- RECENT BOOKINGS -->
+    <div class="profile-section">
+        <div class="profile-section-header">
+            <h5 class="fw-bold mb-0"><i class="fa-solid fa-suitcase me-2"></i>Recent Bookings</h5>
+            <a href="/bookings" class="profile-section-link">View all</a>
+        </div>
+
+        <% if(myBookings.length === 0) { %>
+        <div class="profile-empty">
+            <p class="text-muted mb-1">No bookings yet.</p>
+            <a href="/listings" class="btn btn-sm btn-outline-dark">Explore listings</a>
+        </div>
+        <% } else { %>
+        <div class="profile-bookings-list">
+            <% const recentBookings = myBookings.slice(0, 5); %>
+            <% for(let b of recentBookings) { %>
+            <div class="profile-booking-row">
+                <img src="<%= b.listing.image.url %>" alt="<%= b.listing.title %>" class="profile-booking-thumb">
+                <div class="profile-booking-details">
+                    <a href="/listings/<%= b.listing._id %>" class="profile-booking-title"><%= b.listing.title %></a>
+                    <div class="profile-booking-dates">
+                        <%= b.checkIn.toLocaleDateString("en-IN", { day: "numeric", month: "short" }) %>
+                        &rarr;
+                        <%= b.checkOut.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) %>
+                        &middot; <%= b.totalNights %> night<%= b.totalNights !== 1 ? 's' : '' %>
+                    </div>
+                </div>
+                <div class="profile-booking-right">
+                    <span class="profile-booking-price">&#8377;<%= b.totalPrice.toLocaleString("en-IN") %></span>
+                    <span class="profile-booking-status profile-status-<%= b.status %>"><%= b.status %></span>
+                </div>
+            </div>
+            <% } %>
+        </div>
+        <% } %>
+    </div>
+
+</div>
+</body>

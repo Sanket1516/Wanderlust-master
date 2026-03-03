@@ -3,7 +3,7 @@ const router = express.Router();
 const User =  require("../models/user.js");
 const wrapAsync = require("../utils/wrapAsync.js");
 const passport = require("passport");
-const {saveRedirectUrl} = require("../middleware.js");
+const {saveRedirectUrl, isLoggedIn} = require("../middleware.js");
 const userController = require("../controller/users.js");
 const user = require("../models/user.js");
 
@@ -33,5 +33,8 @@ userController.login);
 
 //To logout the user
 router.get("/logout",userController.logout);
+
+// Profile page — shows the logged-in user's listings, bookings, and account info
+router.get("/profile", isLoggedIn, wrapAsync(userController.renderProfile));
 
 module.exports = router;
