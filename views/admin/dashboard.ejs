@@ -1,0 +1,100 @@
+<% layout("/../layouts/boilerplate") %>
+<body>
+<div class="admin-wrapper">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+        <div class="admin-brand"><i class="fa-solid fa-compass me-2"></i>Admin Panel</div>
+        <nav class="admin-nav">
+            <a href="/admin" class="admin-nav-link active"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+            <a href="/admin/listings" class="admin-nav-link"><i class="fa-solid fa-house"></i> Listings</a>
+            <a href="/admin/users" class="admin-nav-link"><i class="fa-solid fa-users"></i> Users</a>
+            <a href="/admin/bookings" class="admin-nav-link"><i class="fa-solid fa-calendar-check"></i> Bookings</a>
+        </nav>
+        <a href="/listings" class="admin-back-link"><i class="fa-solid fa-arrow-left me-1"></i> Back to Site</a>
+    </aside>
+
+    <!-- Main content -->
+    <main class="admin-main">
+        <h4 class="admin-page-title">Dashboard</h4>
+
+        <!-- Stats cards -->
+        <div class="admin-stats-grid">
+            <div class="admin-stat-card">
+                <div class="admin-stat-icon" style="background:#fff0f1; color:#fe424d;">
+                    <i class="fa-solid fa-house"></i>
+                </div>
+                <div>
+                    <div class="admin-stat-value"><%= totalListings %></div>
+                    <div class="admin-stat-label">Total Listings</div>
+                </div>
+            </div>
+            <div class="admin-stat-card">
+                <div class="admin-stat-icon" style="background:#f0f4ff; color:#4361ee;">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+                <div>
+                    <div class="admin-stat-value"><%= totalUsers %></div>
+                    <div class="admin-stat-label">Total Users</div>
+                </div>
+            </div>
+            <div class="admin-stat-card">
+                <div class="admin-stat-icon" style="background:#f0fff4; color:#2e7d32;">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </div>
+                <div>
+                    <div class="admin-stat-value"><%= totalBookings %></div>
+                    <div class="admin-stat-label">Total Bookings</div>
+                </div>
+            </div>
+            <div class="admin-stat-card">
+                <div class="admin-stat-icon" style="background:#fffbf0; color:#e65100;">
+                    <i class="fa-solid fa-indian-rupee-sign"></i>
+                </div>
+                <div>
+                    <div class="admin-stat-value">&#8377;&nbsp;<%= totalRevenue.toLocaleString("en-IN") %></div>
+                    <div class="admin-stat-label">Confirmed Revenue</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent bookings -->
+        <div class="admin-card mt-4">
+            <div class="admin-card-header">
+                <span>Recent Bookings</span>
+                <a href="/admin/bookings" class="admin-view-all">View all</a>
+            </div>
+            <% if(recentBookings.length === 0) { %>
+            <p class="text-muted p-3 mb-0">No bookings yet.</p>
+            <% } else { %>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Guest</th>
+                            <th>Listing</th>
+                            <th>Check-in</th>
+                            <th>Check-out</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% for(let b of recentBookings) { %>
+                        <tr>
+                            <td>@<%= b.guest ? b.guest.username : "deleted user" %></td>
+                            <td><%= b.listing ? b.listing.title : "deleted listing" %></td>
+                            <td><%= b.checkIn.toLocaleDateString("en-IN", {day:"numeric",month:"short",year:"numeric"}) %></td>
+                            <td><%= b.checkOut.toLocaleDateString("en-IN", {day:"numeric",month:"short",year:"numeric"}) %></td>
+                            <td>&#8377;&nbsp;<%= b.totalPrice.toLocaleString("en-IN") %></td>
+                            <td><span class="admin-status-badge admin-status-<%= b.status %>"><%= b.status %></span></td>
+                        </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+            <% } %>
+        </div>
+    </main>
+</div>
+</body>

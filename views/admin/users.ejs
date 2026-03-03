@@ -1,0 +1,86 @@
+<% layout("/../layouts/boilerplate") %>
+<body>
+<div class="admin-wrapper">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+        <div class="admin-brand"><i class="fa-solid fa-compass me-2"></i>Admin Panel</div>
+        <nav class="admin-nav">
+            <a href="/admin" class="admin-nav-link"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+            <a href="/admin/listings" class="admin-nav-link"><i class="fa-solid fa-house"></i> Listings</a>
+            <a href="/admin/users" class="admin-nav-link active"><i class="fa-solid fa-users"></i> Users</a>
+            <a href="/admin/bookings" class="admin-nav-link"><i class="fa-solid fa-calendar-check"></i> Bookings</a>
+        </nav>
+        <a href="/listings" class="admin-back-link"><i class="fa-solid fa-arrow-left me-1"></i> Back to Site</a>
+    </aside>
+
+    <main class="admin-main">
+        <h4 class="admin-page-title mb-4">All Users <span class="text-muted fw-normal fs-6">(<%= users.length %>)</span></h4>
+
+        <div class="admin-card">
+            <% if(users.length === 0) { %>
+            <p class="text-muted p-3 mb-0">No users found.</p>
+            <% } else { %>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Listings</th>
+                            <th>Bookings</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% for(let user of users) { %>
+                        <tr>
+                            <td class="fw-semibold">@<%= user.username %></td>
+                            <td><%= user.email %></td>
+                            <td>
+                                <% if(user.isAdmin) { %>
+                                <span class="admin-badge" style="background:#fff0f1;color:#fe424d;">Admin</span>
+                                <% } else { %>
+                                <span class="admin-badge">User</span>
+                                <% } %>
+                            </td>
+                            <td><%= listingMap[user._id.toString()] || 0 %></td>
+                            <td><%= bookingMap[user._id.toString()] || 0 %></td>
+                            <td>
+                                <div class="d-flex gap-2 align-items-center">
+                                <% if(currUser._id.equals(user._id)) { %>
+                                    <!-- Can't edit your own account -->
+                                    <span class="text-muted" style="font-size:0.8rem;">You</span>
+                                <% } else { %>
+                                    <!-- Toggle admin role button -->
+                                    <form method="post" action="/admin/users/<%= user._id %>/toggle-admin">
+                                        <button class="admin-btn-toggle-role"
+                                            style="<%= user.isAdmin ? 'border-color:#e0a800;color:#e0a800;' : 'border-color:#4361ee;color:#4361ee;' %>"
+                                            title="<%= user.isAdmin ? 'Remove Admin role' : 'Make Admin' %>">
+                                            <i class="fa-solid <%= user.isAdmin ? 'fa-user-minus' : 'fa-user-shield' %>"></i>
+                                            <%= user.isAdmin ? 'Demote' : 'Make Admin' %>
+                                        </button>
+                                    </form>
+                                    <!-- Delete button (only for non-admins) -->
+                                    <% if(!user.isAdmin) { %>
+                                    <form method="post" action="/admin/users/<%= user._id %>?_method=DELETE"
+                                          onsubmit="return confirm('Delete user @<%= user.username %>? Their bookings will also be deleted.')">
+                                        <button class="admin-btn-delete">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </form>
+                                    <% } %>
+                                <% } %>
+                                </div>
+                            </td>
+                        </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+            <% } %>
+        </div>
+    </main>
+</div>
+</body>

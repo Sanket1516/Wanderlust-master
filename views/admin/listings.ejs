@@ -1,0 +1,71 @@
+<% layout("/../layouts/boilerplate") %>
+<body>
+<div class="admin-wrapper">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+        <div class="admin-brand"><i class="fa-solid fa-compass me-2"></i>Admin Panel</div>
+        <nav class="admin-nav">
+            <a href="/admin" class="admin-nav-link"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+            <a href="/admin/listings" class="admin-nav-link active"><i class="fa-solid fa-house"></i> Listings</a>
+            <a href="/admin/users" class="admin-nav-link"><i class="fa-solid fa-users"></i> Users</a>
+            <a href="/admin/bookings" class="admin-nav-link"><i class="fa-solid fa-calendar-check"></i> Bookings</a>
+        </nav>
+        <a href="/listings" class="admin-back-link"><i class="fa-solid fa-arrow-left me-1"></i> Back to Site</a>
+    </aside>
+
+    <main class="admin-main">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <h4 class="admin-page-title mb-0">All Listings <span class="text-muted fw-normal fs-6">(<%= listings.length %>)</span></h4>
+        </div>
+
+        <div class="admin-card">
+            <% if(listings.length === 0) { %>
+            <p class="text-muted p-3 mb-0">No listings found.</p>
+            <% } else { %>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>Title</th>
+                            <th>Owner</th>
+                            <th>Category</th>
+                            <th>Location</th>
+                            <th>Price / night</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% for(let listing of listings) { %>
+                        <tr>
+                            <td>
+                                <img src="<%= listing.image.url %>" alt="<%= listing.title %>" class="admin-thumb">
+                            </td>
+                            <td>
+                                <a href="/listings/<%= listing._id %>" target="_blank" class="admin-link">
+                                    <%= listing.title %>
+                                </a>
+                            </td>
+                            <td>@<%= listing.owner ? listing.owner.username : "—" %></td>
+                            <td><span class="admin-badge"><%= listing.category || "—" %></span></td>
+                            <td><%= listing.location %>, <%= listing.country %></td>
+                            <td>&#8377;&nbsp;<%= listing.price.toLocaleString("en-IN") %></td>
+                            <td>
+                                <form method="post" action="/admin/listings/<%= listing._id %>?_method=DELETE"
+                                      onsubmit="return confirm('Delete this listing? This cannot be undone.')">
+                                    <button class="admin-btn-delete">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+            <% } %>
+        </div>
+    </main>
+</div>
+</body>

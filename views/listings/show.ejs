@@ -183,7 +183,18 @@
 
             <!-- Map section -->
             <div class="col-10 offset-1 mb-5">
-                <h5 class="fw-bold mb-3"><i class="fa-solid fa-map-location-dot text-danger me-2"></i>Where you can find this place</h5>
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fa-solid fa-map-location-dot text-danger me-2"></i>Where you can find this place
+                    </h5>
+                    <!-- coordinates are [lng, lat] — Google Maps expects lat,lng -->
+                    <a href="https://www.google.com/maps/dir/?api=1&destination=<%= data.geometry.coordinates[1] %>,<%= data.geometry.coordinates[0] %>"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="btn-get-directions">
+                        <i class="fa-solid fa-diamond-turn-right me-1"></i> Get Directions
+                    </a>
+                </div>
                 <div id="map"></div>
             </div>
         </div>

@@ -9,14 +9,14 @@ const userSchema = new schema({
     },
     wishlist: [
         {
-            // ObjectId reference to the "listing" model (lowercase — must match mongoose.model("listing",...) in listing.js)
-            // This stores an array of listing IDs that the user has saved/hearted
-            // Many-to-Many relationship: one user can save many listings, one listing can be saved by many users
             type: schema.Types.ObjectId,
             ref: "listing"
         }
-    ]
-    // NOTE: No migration needed — Mongoose returns [] by default for missing array fields on existing documents
+    ],
+    isAdmin: {
+        type: Boolean,
+        default: false
+    }
 })
 //no need to add the username and password fields saltfield and hashfield it will be handled by the plugin automatically
 userSchema.plugin(passportLocalMongoose);

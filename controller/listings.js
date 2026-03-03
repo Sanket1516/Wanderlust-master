@@ -5,11 +5,6 @@ const mbxGeocoding = require('@mapbox/mapbox-sdk/services/geocoding');
 const mapToken = process.env.MAPBOX_TOKEN;
 const geocodingClient = mbxGeocoding({ accessToken: mapToken });//we have now created a box which will allow us to do the geocoding stuff and also oythers in mapbox if we want
 
-
-
-
-
-
 module.exports.index = async (req, res,next) => {
         const allListings = await Listing.find({}); // Fetch all listings from the database
 
@@ -76,9 +71,11 @@ module.exports.createNewListing = async (req, res) => {
 
         // console.log(response.body.features[0].geometry); //in response there is body in that there is features array in that the first element of that array there is geometry object which has the coordinates
         // res.send("geo coding done");
-        
-        let url = req.file.path;
-        let filename = req.file.filename;
+
+        const DEFAULT_IMAGE_URL = "https://images.unsplash.com/photo-1506974210756-8e1b8985d348?w=1200&auto=format&fit=crop";
+        const DEFAULT_FILENAME  = "default_listing";
+        let url      = req.file ? req.file.path     : DEFAULT_IMAGE_URL;
+        let filename = req.file ? req.file.filename : DEFAULT_FILENAME;
         //if we validate like this every time it it repetative task so we will make an middelware for it forst it will called then async function will be called
         // let result = listingSchema.validate(req.body);
         // if (result.error) {

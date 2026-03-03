@@ -97,6 +97,8 @@ if(process.env.NODE_ENV !== "production"){
     const wishlistRouter = require("./routes/wishlist.js");
     // Booking router handles GET /bookings, POST /listings/:id/book, DELETE /bookings/:id
     const bookingRouter = require("./routes/booking.js");
+    // Admin router handles all /admin/* routes — protected by isAdmin middleware
+    const adminRouter = require("./routes/admin.js");
 
     const sessionOptions = {
         secret : "Mysupersecretcode",
@@ -160,6 +162,8 @@ if(process.env.NODE_ENV !== "production"){
     app.use("/", wishlistRouter);
     // Mount the booking router at root "/" so its routes resolve as /bookings and /listings/:id/book
     app.use("/", bookingRouter);
+    // Mount the admin router at root "/" so its routes resolve as /admin, /admin/listings, etc.
+    app.use("/", adminRouter);
 
     // ===============================================
     // 6. Error Handling Middleware

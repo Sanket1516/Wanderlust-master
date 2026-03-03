@@ -28,7 +28,7 @@
                         </div>
                         <div class="mb-3 col-md-8">
                             <label for="country" class="form-label">Country</label>
-                            <input type="text" name="listing[country]" placeholder="e.g. India" class="form-control" required>
+                            <input type="text" id="country-input" name="listing[country]" placeholder="e.g. India" class="form-control" required>
                             <div class="invalid-feedback">Please enter a valid country</div>
                         </div>
                     </div>
@@ -50,8 +50,14 @@
                         </select>
                     </div>
                     <div class="mb-4">
-                        <label for="location" class="form-label">Location</label>
-                        <input type="text" name="listing[location]" placeholder="e.g. Mumbai, Maharashtra" class="form-control" required>
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <label for="location-input" class="form-label mb-0">Location</label>
+                            <button type="button" id="use-location-btn" class="btn-use-location">
+                                <i class="fa-solid fa-location-crosshairs me-1"></i>
+                                <span id="location-btn-text">Use Current Location</span>
+                            </button>
+                        </div>
+                        <input type="text" id="location-input" name="listing[location]" placeholder="e.g. Mumbai, Maharashtra" class="form-control" required>
                         <div class="invalid-feedback">Please enter a valid location</div>
                     </div>
                     <button class="btn btn-add">
@@ -61,4 +67,73 @@
             </div>
         </div>
     </div>
+
+    <script>
+        (function () {
+            const btn         = document.getElementById("use-location-btn");
+            const btnText     = document.getElementById("location-btn-text");
+            const locationInput = document.getElementById("location-input");
+            const countryInput  = document.getElementById("country-input");
+            const MAPBOX_TOKEN  = '<%= process.env.MAPBOX_TOKEN %>';
+
+            btn.addEventListener("click", function () {
+                if (!navigator.geolocation) {
+                    alert("Geolocation is not supported by your browser.");
+                    return;
+                }
+
+                // Show loading state
+                btn.disabled = true;
+                btnText.textContent = "Detecting...";
+                btn.style.opacity = "0.7";
+
+                navigator.geolocation.getCurrentPosition(
+                    async function (position) {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+
+                        try {
+                            // Mapbox reverse geocoding — convert coordinates to place name
+                            const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_TOKEN}&types=place,region,country&language=en`;
+                            const res  = await fetch(url);
+                            const data = await res.json();
+
+                            if (!data.features || data.features.length === 0) {
+                                throw new Error("No results found for your location.");
+                            }
+
+                            const feature = data.features[0];
+                            const context = feature.context || [];
+
+                            // Extract place, region, and country from context
+                            const place   = feature.text || "";
+                            const region  = (context.find(c => c.id.startsWith("region."))  || {}).text || "";
+                            const country = (context.find(c => c.id.startsWith("country.")) || {}).text || "";
+
+                            // Fill location as "Place, Region" and country separately
+                            locationInput.value = region ? `${place}, ${region}` : place;
+                            countryInput.value  = country;
+
+                        } catch (err) {
+                            alert("Could not detect location: " + err.message);
+                        } finally {
+                            btn.disabled  = false;
+                            btnText.textContent = "Use Current Location";
+                            btn.style.opacity = "1";
+                        }
+                    },
+                    function (err) {
+                        let msg = "Could not get your location.";
+                        if (err.code === 1) msg = "Location access denied. Please allow location access in your browser.";
+                        if (err.code === 2) msg = "Location unavailable. Please enter it manually.";
+                        alert(msg);
+                        btn.disabled  = false;
+                        btnText.textContent = "Use Current Location";
+                        btn.style.opacity = "1";
+                    },
+                    { timeout: 10000 }
+                );
+            });
+        })();
+    </script>
 </body>

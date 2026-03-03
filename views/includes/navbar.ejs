@@ -49,6 +49,11 @@
         <a class="nav-link me-2" href="/bookings">
             <i class="fa-regular fa-calendar-check"></i> My Bookings
         </a>
+        <% if(currUser.isAdmin) { %>
+        <a class="nav-link me-2 admin-nav-badge" href="/admin">
+            <i class="fa-solid fa-shield-halved"></i> Admin
+        </a>
+        <% } %>
         <a class="nav-link" href="/logout">Log Out</a>
         <% } %>
       </div>

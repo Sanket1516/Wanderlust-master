@@ -1,0 +1,75 @@
+<% layout("/../layouts/boilerplate") %>
+<body>
+<div class="admin-wrapper">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+        <div class="admin-brand"><i class="fa-solid fa-compass me-2"></i>Admin Panel</div>
+        <nav class="admin-nav">
+            <a href="/admin" class="admin-nav-link"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+            <a href="/admin/listings" class="admin-nav-link"><i class="fa-solid fa-house"></i> Listings</a>
+            <a href="/admin/users" class="admin-nav-link"><i class="fa-solid fa-users"></i> Users</a>
+            <a href="/admin/bookings" class="admin-nav-link active"><i class="fa-solid fa-calendar-check"></i> Bookings</a>
+        </nav>
+        <a href="/listings" class="admin-back-link"><i class="fa-solid fa-arrow-left me-1"></i> Back to Site</a>
+    </aside>
+
+    <main class="admin-main">
+        <h4 class="admin-page-title mb-4">All Bookings <span class="text-muted fw-normal fs-6">(<%= bookings.length %>)</span></h4>
+
+        <div class="admin-card">
+            <% if(bookings.length === 0) { %>
+            <p class="text-muted p-3 mb-0">No bookings yet.</p>
+            <% } else { %>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Guest</th>
+                            <th>Listing</th>
+                            <th>Check-in</th>
+                            <th>Check-out</th>
+                            <th>Nights</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Booked on</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% for(let b of bookings) { %>
+                        <tr>
+                            <td>@<%= b.guest ? b.guest.username : "deleted" %></td>
+                            <td>
+                                <% if(b.listing) { %>
+                                <a href="/listings/<%= b.listing._id %>" target="_blank" class="admin-link">
+                                    <%= b.listing.title %>
+                                </a>
+                                <% } else { %>
+                                <span class="text-muted">deleted</span>
+                                <% } %>
+                            </td>
+                            <td><%= b.checkIn.toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"}) %></td>
+                            <td><%= b.checkOut.toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"}) %></td>
+                            <td><%= b.totalNights %></td>
+                            <td>&#8377;&nbsp;<%= b.totalPrice.toLocaleString("en-IN") %></td>
+                            <td><span class="admin-status-badge admin-status-<%= b.status %>"><%= b.status %></span></td>
+                            <td><%= b.createdAt.toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"}) %></td>
+                            <td>
+                                <form method="post" action="/admin/bookings/<%= b._id %>?_method=DELETE"
+                                      onsubmit="return confirm('Hard-delete this booking record?')">
+                                    <button class="admin-btn-delete">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+            <% } %>
+        </div>
+    </main>
+</div>
+</body>
