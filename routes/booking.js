@@ -7,7 +7,10 @@ const bookingController = require("../controller/booking.js");
 // GET /bookings — My Bookings page
 router.get("/bookings", isLoggedIn, wrapAsync(bookingController.renderMyBookings));
 
-// POST /listings/:id/book — Create a new booking
+// GET /bookings/success — Stripe redirects here after successful payment
+router.get("/bookings/success", isLoggedIn, wrapAsync(bookingController.paymentSuccess));
+
+// POST /listings/:id/book — Create Stripe Checkout Session and redirect to payment
 router.post("/listings/:id/book", isLoggedIn, wrapAsync(bookingController.createBooking));
 
 // DELETE /bookings/:bookingId — Cancel a booking

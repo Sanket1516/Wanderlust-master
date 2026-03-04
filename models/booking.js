@@ -30,6 +30,9 @@ const bookingSchema = new schema({
         required: true,
         min: 0
     },
+    stripeSessionId: {
+        type: String
+    },
     status: {
         type: String,
         enum: ["confirmed", "cancelled"],
