@@ -102,6 +102,7 @@ if(process.env.NODE_ENV !== "production"){
     const bookingRouter = require("./routes/booking.js");
     // Admin router handles all /admin/* routes — protected by isAdmin middleware
     const adminRouter = require("./routes/admin.js");
+    const aiRouter = require("./routes/ai.js");
 
     const sessionOptions = {
         secret : "Mysupersecretcode",
@@ -167,6 +168,8 @@ if(process.env.NODE_ENV !== "production"){
     app.use("/", bookingRouter);
     // Mount the admin router at root "/" so its routes resolve as /admin, /admin/listings, etc.
     app.use("/", adminRouter);
+    // Mount AI feature routes (description generation, review summary).
+    app.use("/", aiRouter);
 
     // ===============================================
     // 6. Error Handling Middleware

@@ -12,8 +12,15 @@
                     </div>
                     <div class="mb-3">
                         <label for="description" class="form-label">Description</label>
-                        <textarea name="listing[description]" class="form-control" rows="4" placeholder="Describe your place..." required></textarea>
+                        <textarea id="description-input" name="listing[description]" class="form-control" rows="4" placeholder="Describe your place..." required></textarea>
                         <div class="invalid-feedback">Please enter a valid description</div>
+                        <div class="d-flex align-items-center gap-2 mt-2">
+                            <button type="button" id="ai-description-btn" class="btn btn-sm btn-outline-dark">
+                                <i class="fa-solid fa-wand-magic-sparkles me-1"></i>
+                                <span id="ai-description-btn-text">Generate with AI</span>
+                            </button>
+                            <span id="ai-description-status" class="text-muted" style="font-size:0.82rem;"></span>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="image" class="form-label">Upload Image</label>
@@ -74,6 +81,13 @@
             const btnText     = document.getElementById("location-btn-text");
             const locationInput = document.getElementById("location-input");
             const countryInput  = document.getElementById("country-input");
+            const titleInput = document.querySelector('input[name="listing[title]"]');
+            const categoryInput = document.querySelector('select[name="listing[category]"]');
+            const priceInput = document.querySelector('input[name="listing[price]"]');
+            const descriptionInput = document.getElementById("description-input");
+            const aiDescriptionBtn = document.getElementById("ai-description-btn");
+            const aiDescriptionBtnText = document.getElementById("ai-description-btn-text");
+            const aiDescriptionStatus = document.getElementById("ai-description-status");
             const MAPBOX_TOKEN  = '<%= process.env.MAPBOX_TOKEN %>';
 
             btn.addEventListener("click", function () {
@@ -133,6 +147,47 @@
                     },
                     { timeout: 10000 }
                 );
+            });
+
+            aiDescriptionBtn.addEventListener("click", async function () {
+                const payload = {
+                    title: titleInput.value.trim(),
+                    location: locationInput.value.trim(),
+                    country: countryInput.value.trim(),
+                    category: categoryInput.value,
+                    price: priceInput.value.trim(),
+                };
+
+                if (!payload.title || !payload.location || !payload.country || !payload.category) {
+                    aiDescriptionStatus.textContent = "Fill title, location, country, and category first.";
+                    return;
+                }
+
+                aiDescriptionBtn.disabled = true;
+                aiDescriptionBtnText.textContent = "Generating...";
+                aiDescriptionStatus.textContent = "";
+
+                try {
+                    const response = await fetch("/ai/listings/description", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload),
+                    });
+
+                    const data = await response.json();
+                    if (!response.ok || !data.success) {
+                        aiDescriptionStatus.textContent = data.error || "AI generation failed.";
+                        return;
+                    }
+
+                    descriptionInput.value = data.description;
+                    aiDescriptionStatus.textContent = "AI description added. You can edit it before submit.";
+                } catch (err) {
+                    aiDescriptionStatus.textContent = "Unable to reach AI service right now.";
+                } finally {
+                    aiDescriptionBtn.disabled = false;
+                    aiDescriptionBtnText.textContent = "Generate with AI";
+                }
             });
         })();
     </script>

@@ -133,6 +133,23 @@
                     const isOwner = currUser && data.owner._id.equals(currUser._id);
                 %>
 
+                <% if(data.reviews.length > 0) { %>
+                <div class="review-form-card mb-4">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <div>
+                            <h5 class="fw-bold mb-1">AI Review Summary</h5>
+                            <p class="mb-0 text-muted" style="font-size:0.88rem;">Get a quick, balanced summary from guest reviews.</p>
+                        </div>
+                        <button type="button" id="ai-review-summary-btn" class="btn btn-sm btn-outline-dark">
+                            <i class="fa-solid fa-sparkles me-1"></i>
+                            <span id="ai-review-summary-btn-text">Generate Summary</span>
+                        </button>
+                    </div>
+                    <div id="ai-review-summary-status" class="text-muted mt-2" style="font-size:0.84rem;"></div>
+                    <div id="ai-review-summary-output" class="mt-3 d-none" style="white-space: pre-wrap; line-height:1.5;"></div>
+                </div>
+                <% } %>
+
                 <% if(currUser && !isOwner && !alreadyReviewed) { %>
                 <div class="review-form-card mb-4">
                     <h5 class="fw-bold mb-3">Leave a Review</h5>
@@ -358,6 +375,43 @@
                         alert("Something went wrong. Please try again.");
                         payBtn.disabled = false;
                         payBtn.innerHTML = '<i class="fa-solid fa-lock me-1"></i> Pay & Book Now';
+                    }
+                });
+            })();
+        </script>
+        <script>
+            (function() {
+                const btn = document.getElementById("ai-review-summary-btn");
+                if (!btn) return;
+
+                const btnText = document.getElementById("ai-review-summary-btn-text");
+                const statusEl = document.getElementById("ai-review-summary-status");
+                const outputEl = document.getElementById("ai-review-summary-output");
+                const listingId = "<%= data._id %>";
+
+                btn.addEventListener("click", async function() {
+                    btn.disabled = true;
+                    btnText.textContent = "Generating...";
+                    statusEl.textContent = "";
+                    outputEl.classList.add("d-none");
+
+                    try {
+                        const response = await fetch(`/ai/listings/${listingId}/review-summary`);
+                        const data = await response.json();
+
+                        if (!response.ok || !data.success) {
+                            statusEl.textContent = data.error || "Unable to generate summary right now.";
+                            return;
+                        }
+
+                        outputEl.textContent = data.summary;
+                        outputEl.classList.remove("d-none");
+                        statusEl.textContent = `Based on ${data.meta.reviewCount} review(s), avg rating ${data.meta.averageRating}/5.`;
+                    } catch (err) {
+                        statusEl.textContent = "Unable to reach AI service right now.";
+                    } finally {
+                        btn.disabled = false;
+                        btnText.textContent = "Generate Summary";
                     }
                 });
             })();

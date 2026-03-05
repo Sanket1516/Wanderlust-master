@@ -48,9 +48,11 @@ The application is built using the **MVC (Model-View-Controller)** architectural
 ### Authenticated Users
 - Sign up and log in securely
 - Create new property listings with image upload, geocoding, and category
+- AI-assisted listing description generation (Gemini)
 - Edit or delete your own listings
 - Leave star-rated reviews with comments on any listing
 - Delete your own reviews
+- AI-generated review summary on listing detail pages
 - Automatic redirect back to intended page after login
 
 ---
@@ -178,6 +180,8 @@ CLOUD_NAME=your_cloudinary_cloud_name
 CLOUD_API_KEY=your_cloudinary_api_key
 CLOUD_API_SECRET=your_cloudinary_api_secret
 MAPBOX_TOKEN=your_mapbox_public_token
+GEMINI_API_KEY=your_google_ai_studio_api_key
+GEMINI_MODEL=gemini-1.5-flash
 ```
 
 | Variable | Description |
@@ -186,6 +190,8 @@ MAPBOX_TOKEN=your_mapbox_public_token
 | `CLOUD_API_KEY` | Your Cloudinary API key |
 | `CLOUD_API_SECRET` | Your Cloudinary API secret |
 | `MAPBOX_TOKEN` | Your Mapbox public access token |
+| `GEMINI_API_KEY` | Google AI Studio API key used for AI description + review summary |
+| `GEMINI_MODEL` | Optional Gemini model override (default: `gemini-1.5-flash`) |
 
 > **Note:** Never commit your `.env` file to version control.
 
@@ -233,6 +239,13 @@ The application will start on **http://localhost:8080**
 | GET | `/login` | Show login form |
 | POST | `/login` | Authenticate user |
 | GET | `/logout` | Log out current user |
+
+### AI Routes
+
+| Method | Path | Description | Auth Required |
+|---|---|---|---|
+| POST | `/ai/listings/description` | Generate listing description suggestion from form fields | Yes |
+| GET | `/ai/listings/:id/review-summary` | Generate AI summary from listing reviews | No |
 
 ---
 
