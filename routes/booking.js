@@ -7,11 +7,11 @@ const bookingController = require("../controller/booking.js");
 // GET /bookings — My Bookings page
 router.get("/bookings", isLoggedIn, wrapAsync(bookingController.renderMyBookings));
 
-// GET /bookings/success — Stripe redirects here after successful payment
-router.get("/bookings/success", isLoggedIn, wrapAsync(bookingController.paymentSuccess));
+// POST /listings/:id/book — Create Razorpay Order and return JSON (AJAX)
+router.post("/listings/:id/book", isLoggedIn, wrapAsync(bookingController.createOrder));
 
-// POST /listings/:id/book — Create Stripe Checkout Session and redirect to payment
-router.post("/listings/:id/book", isLoggedIn, wrapAsync(bookingController.createBooking));
+// POST /bookings/verify — Verify Razorpay payment signature and create booking (AJAX)
+router.post("/bookings/verify", isLoggedIn, wrapAsync(bookingController.verifyPayment));
 
 // DELETE /bookings/:bookingId — Cancel a booking
 router.delete("/bookings/:bookingId", isLoggedIn, wrapAsync(bookingController.cancelBooking));

@@ -65,6 +65,9 @@ if(process.env.NODE_ENV !== "production"){
     // Parse URL-encoded bodies (for form data submission)
     app.use(express.urlencoded({ extended: true }));
 
+    // Parse JSON request bodies (for AJAX requests like Razorpay payment flow)
+    app.use(express.json());
+
     // Use method-override for PUT and DELETE requests
     app.use(methodOverride("_method"));
 

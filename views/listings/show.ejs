@@ -112,11 +112,11 @@
                                 <span id="summary-total" class="fw-bold text-danger fs-5"></span>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-add w-100 mt-3">
+                        <button type="submit" class="btn btn-add w-100 mt-3" id="pay-btn">
                             <i class="fa-solid fa-lock me-1"></i> Pay & Book Now
                         </button>
                         <p class="text-center text-muted mt-2 mb-0" style="font-size:0.78rem;">
-                            <i class="fa-brands fa-stripe me-1"></i> Secure payment powered by Stripe
+                            <i class="fa-solid fa-shield-halved me-1"></i> Secure payment powered by Razorpay
                         </p>
                     </form>
                 </div>
@@ -216,7 +216,9 @@
         </div>
 
         <script src="/js/map.js"></script>
-        <!-- Booking panel: set min dates and live price calculation -->
+        <!-- Razorpay Checkout SDK -->
+        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+        <!-- Booking panel: set min dates, live price calculation, and Razorpay payment flow -->
         <script>
             (function() {
                 const checkInInput  = document.getElementById("checkIn");
@@ -247,11 +249,9 @@
                 }
 
                 checkInInput.addEventListener("change", function() {
-                    // Push check-out minimum one day ahead of check-in
                     const nextDay = new Date(this.value);
                     nextDay.setDate(nextDay.getDate() + 1);
                     checkOutInput.min = nextDay.toISOString().split("T")[0];
-                    // Clear check-out if it is now invalid
                     if (checkOutInput.value && checkOutInput.value <= this.value) {
                         checkOutInput.value = "";
                     }
@@ -259,6 +259,107 @@
                 });
 
                 checkOutInput.addEventListener("change", updateSummary);
+
+                // ── Razorpay Payment Flow ──
+                const bookingForm = document.getElementById("booking-form");
+                const payBtn      = document.getElementById("pay-btn");
+                const listingId   = "<%= data._id %>";
+
+                bookingForm.addEventListener("submit", async function(e) {
+                    e.preventDefault(); // Stop the normal form POST
+
+                    // Basic validation — both dates must be filled
+                    if (!checkInInput.value || !checkOutInput.value) {
+                        bookingForm.classList.add("was-validated");
+                        return;
+                    }
+
+                    // Disable button while processing
+                    payBtn.disabled = true;
+                    payBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Processing...';
+
+                    try {
+                        // Step 1: Create Razorpay Order on the server
+                        const res = await fetch("/listings/" + listingId + "/book", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                checkIn: checkInInput.value,
+                                checkOut: checkOutInput.value
+                            })
+                        });
+
+                        const data = await res.json();
+
+                        if (!res.ok || !data.success) {
+                            alert(data.error || "Something went wrong. Please try again.");
+                            payBtn.disabled = false;
+                            payBtn.innerHTML = '<i class="fa-solid fa-lock me-1"></i> Pay & Book Now';
+                            return;
+                        }
+
+                        // Step 2: Open Razorpay checkout modal with order details
+                        const options = {
+                            key: data.key,
+                            amount: data.order.amount,
+                            currency: data.order.currency,
+                            name: "Wanderlust",
+                            description: data.booking.totalNights + " night" + (data.booking.totalNights > 1 ? "s" : "") + " — " + data.listing.title,
+                            image: data.listing.image,
+                            order_id: data.order.id,
+                            // Step 3: Called when payment succeeds
+                            handler: async function(response) {
+                                payBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Confirming booking...';
+                                try {
+                                    // Send payment details to server for verification
+                                    const verifyRes = await fetch("/bookings/verify", {
+                                        method: "POST",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({
+                                            razorpay_order_id: response.razorpay_order_id,
+                                            razorpay_payment_id: response.razorpay_payment_id,
+                                            razorpay_signature: response.razorpay_signature
+                                        })
+                                    });
+                                    const verifyData = await verifyRes.json();
+                                    if (verifyData.success) {
+                                        window.location.href = verifyData.redirect;
+                                    } else {
+                                        alert(verifyData.error || "Payment verification failed.");
+                                        payBtn.disabled = false;
+                                        payBtn.innerHTML = '<i class="fa-solid fa-lock me-1"></i> Pay & Book Now';
+                                    }
+                                } catch (err) {
+                                    alert("Something went wrong while verifying payment.");
+                                    payBtn.disabled = false;
+                                    payBtn.innerHTML = '<i class="fa-solid fa-lock me-1"></i> Pay & Book Now';
+                                }
+                            },
+                            prefill: {
+                                name: data.user.name,
+                                email: data.user.email
+                            },
+                            theme: {
+                                color: "#fe424d"
+                            },
+                            modal: {
+                                ondismiss: function() {
+                                    // User closed the Razorpay modal without paying
+                                    payBtn.disabled = false;
+                                    payBtn.innerHTML = '<i class="fa-solid fa-lock me-1"></i> Pay & Book Now';
+                                }
+                            }
+                        };
+
+                        const rzp = new Razorpay(options);
+                        rzp.open();
+
+                    } catch (err) {
+                        alert("Something went wrong. Please try again.");
+                        payBtn.disabled = false;
+                        payBtn.innerHTML = '<i class="fa-solid fa-lock me-1"></i> Pay & Book Now';
+                    }
+                });
             })();
         </script>
     </body>

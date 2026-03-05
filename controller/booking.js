@@ -1,18 +1,49 @@
 const Booking = require("../models/booking.js");
 const Listing = require("../models/listing.js");
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const crypto = require("crypto");
 
-// POST /listings/:id/book
-// Validates dates, checks for overlapping bookings, then creates a Stripe Checkout Session
-// and redirects the user to Stripe's hosted payment page.
-module.exports.createBooking = async (req, res) => {
-    const listing = await Listing.findById(req.params.id);
-    if (!listing) {
-        req.flash("error", "Listing not found.");
-        return res.redirect("/listings");
+let razorpayClient = null;
+
+function getRazorpayClient() {
+    const keyId = process.env.RAZORPAY_KEY_ID;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+    if (!keyId || !keySecret) {
+        return { error: "Payments are temporarily unavailable." };
     }
 
-    const { checkIn, checkOut } = req.body.booking;
+    if (!razorpayClient) {
+        let Razorpay;
+        try {
+            Razorpay = require("razorpay");
+        } catch (err) {
+            return { error: "Payments are temporarily unavailable." };
+        }
+
+        razorpayClient = new Razorpay({
+            key_id: keyId,
+            key_secret: keySecret,
+        });
+    }
+
+    return { client: razorpayClient };
+}
+
+// POST /listings/:id/book  (AJAX — called via fetch from show.ejs)
+// Validates dates, checks for overlapping bookings, then creates a Razorpay Order
+// and returns the order details as JSON so the frontend can open the Razorpay checkout modal.
+module.exports.createOrder = async (req, res) => {
+    const { client: razorpay, error: paymentInitError } = getRazorpayClient();
+    if (paymentInitError) {
+        return res.status(503).json({ error: paymentInitError });
+    }
+
+    const listing = await Listing.findById(req.params.id);
+    if (!listing) {
+        return res.status(404).json({ error: "Listing not found." });
+    }
+
+    const { checkIn, checkOut } = req.body;
     const checkInDate = new Date(checkIn);
     const checkOutDate = new Date(checkOut);
     const today = new Date();
@@ -20,12 +51,10 @@ module.exports.createBooking = async (req, res) => {
 
     // Validate dates
     if (checkInDate < today) {
-        req.flash("error", "Check-in date cannot be in the past.");
-        return res.redirect(`/listings/${req.params.id}`);
+        return res.status(400).json({ error: "Check-in date cannot be in the past." });
     }
     if (checkOutDate <= checkInDate) {
-        req.flash("error", "Check-out date must be after check-in date.");
-        return res.redirect(`/listings/${req.params.id}`);
+        return res.status(400).json({ error: "Check-out date must be after check-in date." });
     }
 
     // Check for overlapping confirmed bookings on this listing
@@ -37,82 +66,96 @@ module.exports.createBooking = async (req, res) => {
     });
 
     if (overlap) {
-        req.flash("error", "This listing is already booked for the selected dates. Please choose different dates.");
-        return res.redirect(`/listings/${req.params.id}`);
+        return res.status(409).json({ error: "This listing is already booked for the selected dates. Please choose different dates." });
     }
 
     const msPerDay = 1000 * 60 * 60 * 24;
     const totalNights = Math.round((checkOutDate - checkInDate) / msPerDay);
     const totalPrice = totalNights * listing.price;
 
-    // Create a Stripe Checkout Session
-    // Stripe expects amounts in the smallest currency unit (paise for INR), so multiply by 100
-    const session = await stripe.checkout.sessions.create({
-        payment_method_types: ["card"],
-        line_items: [
-            {
-                price_data: {
-                    currency: "inr",
-                    product_data: {
-                        name: listing.title,
-                        description: `${totalNights} night${totalNights > 1 ? "s" : ""} at ${listing.location}, ${listing.country}`,
-                        images: [listing.image.url]
-                    },
-                    unit_amount: totalPrice * 100 // Convert rupees to paise
-                },
-                quantity: 1
-            }
-        ],
-        mode: "payment",
-        // Store booking details in session metadata so we can create the booking after payment
-        metadata: {
+    // Create a Razorpay Order
+    // Razorpay expects amount in the smallest currency unit (paise for INR), so multiply by 100
+    const order = await razorpay.orders.create({
+        amount: totalPrice * 100,   // e.g., ₹5000 → 500000 paise
+        currency: "INR",
+        receipt: `booking_${listing._id}_${Date.now()}`,
+        // notes are stored on the order and can be retrieved during verification
+        notes: {
             listingId: listing._id.toString(),
             guestId: req.user._id.toString(),
             checkIn: checkIn,
             checkOut: checkOut,
             totalNights: totalNights.toString(),
             totalPrice: totalPrice.toString()
-        },
-        success_url: `${req.protocol}://${req.get("host")}/bookings/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${req.protocol}://${req.get("host")}/listings/${listing._id}`
+        }
     });
 
-    // Redirect user to Stripe's hosted checkout page
-    res.redirect(303, session.url);
+    // Return order details + Razorpay key to the frontend
+    // The frontend will use these to open the Razorpay checkout modal
+    res.json({
+        success: true,
+        order: {
+            id: order.id,
+            amount: order.amount,
+            currency: order.currency
+        },
+        key: process.env.RAZORPAY_KEY_ID,
+        listing: {
+            title: listing.title,
+            image: listing.image.url
+        },
+        user: {
+            name: req.user.username,
+            email: req.user.email
+        },
+        booking: {
+            checkIn,
+            checkOut,
+            totalNights,
+            totalPrice
+        }
+    });
 };
 
-// GET /bookings/success?session_id=...
-// Called by Stripe after successful payment. Retrieves session, verifies payment, creates booking.
-module.exports.paymentSuccess = async (req, res) => {
-    const { session_id } = req.query;
-    if (!session_id) {
-        req.flash("error", "Invalid payment session.");
-        return res.redirect("/listings");
+// POST /bookings/verify  (AJAX — called after Razorpay payment succeeds)
+// Verifies the Razorpay payment signature using HMAC SHA256,
+// then creates the booking in MongoDB.
+module.exports.verifyPayment = async (req, res) => {
+    const { client: razorpay, error: paymentInitError } = getRazorpayClient();
+    if (paymentInitError) {
+        return res.status(503).json({ error: paymentInitError });
     }
 
-    // Retrieve the checkout session from Stripe
-    const session = await stripe.checkout.sessions.retrieve(session_id);
-
-    // Verify payment was successful
-    if (session.payment_status !== "paid") {
-        req.flash("error", "Payment was not completed. Please try again.");
-        return res.redirect("/listings");
+    if (!process.env.RAZORPAY_KEY_SECRET) {
+        return res.status(503).json({ error: "Payments are temporarily unavailable." });
     }
 
-    // Prevent duplicate booking creation if user refreshes the success page
-    const existingBooking = await Booking.findOne({ stripeSessionId: session.id });
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+    // Verify the payment signature
+    // Razorpay sends: HMAC_SHA256(order_id + "|" + payment_id, key_secret)
+    const expectedSignature = crypto
+        .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+        .update(razorpay_order_id + "|" + razorpay_payment_id)
+        .digest("hex");
+
+    if (expectedSignature !== razorpay_signature) {
+        return res.status(400).json({ error: "Payment verification failed. Invalid signature." });
+    }
+
+    // Prevent duplicate booking if this order was already processed
+    const existingBooking = await Booking.findOne({ razorpayOrderId: razorpay_order_id });
     if (existingBooking) {
-        req.flash("success", "Your booking is already confirmed!");
-        return res.redirect("/bookings");
+        return res.json({ success: true, redirect: "/bookings", message: "Booking already confirmed!" });
     }
 
-    // Extract booking details from session metadata
-    const { listingId, guestId, checkIn, checkOut, totalNights, totalPrice } = session.metadata;
+    // Fetch the order from Razorpay to get the booking details from notes
+    const order = await razorpay.orders.fetch(razorpay_order_id);
+    const { listingId, guestId, checkIn, checkOut, totalNights, totalPrice } = order.notes;
 
     // Verify the logged-in user matches the guest who initiated the payment
     if (guestId !== req.user._id.toString()) {
-        req.flash("error", "Unauthorized access to this booking.");
-        return res.redirect("/listings");
+        return res.status(403).json({ error: "Unauthorized access to this booking." });
     }
 
     // Create the booking in the database
@@ -123,13 +166,15 @@ module.exports.paymentSuccess = async (req, res) => {
         checkOut: new Date(checkOut),
         totalNights: Number(totalNights),
         totalPrice: Number(totalPrice),
-        stripeSessionId: session.id,
+        razorpayOrderId: razorpay_order_id,
+        razorpayPaymentId: razorpay_payment_id,
         status: "confirmed"
     });
 
     await booking.save();
+
     req.flash("success", `Payment successful! Booking confirmed — ${totalNights} night${Number(totalNights) > 1 ? "s" : ""} at ₹${Number(totalPrice).toLocaleString("en-IN")}`);
-    res.redirect("/bookings");
+    res.json({ success: true, redirect: "/bookings" });
 };
 
 // GET /bookings

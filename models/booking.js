@@ -30,7 +30,10 @@ const bookingSchema = new schema({
         required: true,
         min: 0
     },
-    stripeSessionId: {
+    razorpayOrderId: {
+        type: String
+    },
+    razorpayPaymentId: {
         type: String
     },
     status: {
