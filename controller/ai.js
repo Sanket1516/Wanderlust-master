@@ -1,6 +1,7 @@
 const Listing = require("../models/listing");
 const Review = require("../models/review");
 const { generateGeminiText, isAiConfigured } = require("../utils/ai");
+const { chatWithGroq, isGroqConfigured, SYSTEM_PROMPT } = require("../utils/groqChat");
 
 module.exports.generateListingDescription = async (req, res) => {
     const { title, location, country, category, price } = req.body || {};
@@ -116,4 +117,76 @@ module.exports.generateReviewSummary = async (req, res) => {
             averageRating: Number(avgRating),
         },
     });
+};
+
+// ── Listings cache for chatbot context ────────────────────────────
+let _listingsCache = null;
+let _listingsCacheTime = 0;
+const LISTINGS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+async function getCachedListings() {
+    const now = Date.now();
+    if (_listingsCache && (now - _listingsCacheTime) < LISTINGS_CACHE_TTL) {
+        return _listingsCache;
+    }
+    const listings = await Listing.find({})
+        .select("title price location country category")
+        .lean();
+    _listingsCache = listings;
+    _listingsCacheTime = now;
+    return listings;
+}
+
+function formatListingsForPrompt(listings) {
+    if (!listings || listings.length === 0) return "";
+    const header = `\n\nCURRENT WANDERLUST LISTINGS (${listings.length} total):`;
+    const lines = listings.map((l) => {
+        const price = l.price ? `${l.price}/night` : "Price N/A";
+        return `- ${l.title} | ${l.location}, ${l.country} | ${price} | ${l.category}`;
+    });
+    return header + "\n" + lines.join("\n");
+}
+
+// ── Chatbot (Groq) ────────────────────────────────────────────────
+module.exports.chatMessage = async (req, res) => {
+    if (!isGroqConfigured()) {
+        return res.status(503).json({ error: "Chat is currently unavailable." });
+    }
+
+    const { message } = req.body || {};
+    if (!message || typeof message !== "string" || !message.trim()) {
+        return res.status(400).json({ error: "Message is required." });
+    }
+
+    // Keep conversation history in the session (last 20 messages max)
+    if (!req.session.chatHistory) {
+        req.session.chatHistory = [];
+    }
+
+    req.session.chatHistory.push({ role: "user", content: message.trim() });
+
+    // Trim to last 20 messages to keep token usage low
+    if (req.session.chatHistory.length > 20) {
+        req.session.chatHistory = req.session.chatHistory.slice(-20);
+    }
+
+    // Build listing-aware system prompt
+    const listings = await getCachedListings();
+    const listingsBlock = formatListingsForPrompt(listings);
+    const systemPrompt = SYSTEM_PROMPT + listingsBlock;
+
+    const result = await chatWithGroq(req.session.chatHistory, { systemPrompt });
+
+    if (!result.ok) {
+        return res.status(result.status || 500).json({ error: result.error });
+    }
+
+    req.session.chatHistory.push({ role: "assistant", content: result.message });
+
+    return res.json({ success: true, reply: result.message });
+};
+
+module.exports.clearChat = (req, res) => {
+    req.session.chatHistory = [];
+    return res.json({ success: true });
 };

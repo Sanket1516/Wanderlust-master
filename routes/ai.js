@@ -18,4 +18,15 @@ router.get(
     wrapAsync(aiController.generateReviewSummary)
 );
 
+// Chatbot endpoints
+router.post(
+    "/ai/chat",
+    wrapAsync(aiController.chatMessage)
+);
+
+router.delete(
+    "/ai/chat",
+    wrapAsync(aiController.clearChat)
+);
+
 module.exports = router;
