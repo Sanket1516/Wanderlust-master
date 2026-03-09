@@ -49,6 +49,13 @@
         <a class="nav-link me-2" href="/bookings">
             <i class="fa-regular fa-calendar-check"></i> My Bookings
         </a>
+        <a class="nav-link position-relative me-2" href="/messages">
+            <i class="fa-regular fa-envelope"></i> Messages
+            <span id="messages-badge"
+                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger <%= (typeof unreadMsgCount !== 'undefined' && unreadMsgCount > 0) ? '' : 'd-none' %>">
+                <%= (typeof unreadMsgCount !== 'undefined') ? unreadMsgCount : 0 %>
+            </span>
+        </a>
         <% if(currUser.isAdmin) { %>
         <a class="nav-link me-2 admin-nav-badge" href="/admin">
             <i class="fa-solid fa-shield-halved"></i> Admin

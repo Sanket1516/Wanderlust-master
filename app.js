@@ -29,6 +29,7 @@ if(process.env.NODE_ENV !== "production"){
     // Model imports
     const Listing = require("./models/listing.js"); // Mongoose model for your listings
     const Review = require("./models/review.js");
+    const Message = require("./models/message.js");
 
     // ===============================================
     // 2. Configuration Variables
@@ -103,6 +104,7 @@ if(process.env.NODE_ENV !== "production"){
     // Admin router handles all /admin/* routes — protected by isAdmin middleware
     const adminRouter = require("./routes/admin.js");
     const aiRouter = require("./routes/ai.js");
+    const messageRouter = require("./routes/message.js");
 
     const sessionOptions = {
         secret : "Mysupersecretcode",
@@ -124,7 +126,7 @@ if(process.env.NODE_ENV !== "production"){
     passport.serializeUser(User.serializeUser());
     passport.deserializeUser(User.deserializeUser());
     //it will store the user info in the session and also remove it from the session
-    app.use((req,res,next) => {
+    app.use(async (req,res,next) => {
         res.locals.success = req.flash("success");
         res.locals.error = req.flash("error");
         res.locals.currUser = req.user;
@@ -132,6 +134,12 @@ if(process.env.NODE_ENV !== "production"){
         // req.user.wishlist is already loaded by Passport's deserializeUser (calls User.findById on every request)
         // so this is just an array .length — no extra database query needed.
         res.locals.wishlistCount = req.user ? req.user.wishlist.length : 0;
+        // Pass unread message count for the navbar badge
+        if (req.user) {
+            res.locals.unreadMsgCount = await Message.countDocuments({ receiver: req.user._id, read: false });
+        } else {
+            res.locals.unreadMsgCount = 0;
+        }
         next();
     });
 
@@ -170,6 +178,8 @@ if(process.env.NODE_ENV !== "production"){
     app.use("/", adminRouter);
     // Mount AI feature routes (description generation, review summary).
     app.use("/", aiRouter);
+    // Mount messaging routes (inbox, conversations, send messages)
+    app.use("/", messageRouter);
 
     // ===============================================
     // 6. Error Handling Middleware

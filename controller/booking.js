@@ -1,6 +1,9 @@
 const Booking = require("../models/booking.js");
 const Listing = require("../models/listing.js");
+const User = require("../models/user.js");
 const crypto = require("crypto");
+const { sendMail } = require("../utils/mailer.js");
+const emailTemplates = require("../utils/emailTemplates.js");
 
 let razorpayClient = null;
 
@@ -8,8 +11,8 @@ function getRazorpayClient() {
     const keyId = process.env.RAZORPAY_KEY_ID;
     const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
-    if (!keyId || !keySecret) {
-        return { error: "Payments are temporarily unavailable." };
+    if (!keyId || !keySecret || keyId.includes("YOUR_") || keySecret.includes("YOUR_")) {
+        return { error: "Payments are temporarily unavailable. Razorpay is not configured yet." };
     }
 
     if (!razorpayClient) {
@@ -173,8 +176,123 @@ module.exports.verifyPayment = async (req, res) => {
 
     await booking.save();
 
+    // Send booking confirmation emails (non-blocking — don't fail the request if email fails)
+    const listing = await Listing.findById(listingId).populate("owner");
+    const formatDate = (d) => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+
+    // Email to guest
+    sendMail({
+        to: req.user.email,
+        subject: `Booking Confirmed — ${listing.title}`,
+        html: emailTemplates.bookingConfirmation({
+            listingTitle: listing.title,
+            checkIn: formatDate(checkIn),
+            checkOut: formatDate(checkOut),
+            totalNights: Number(totalNights),
+            totalPrice: Number(totalPrice)
+        })
+    });
+
+    // Email to host
+    if (listing.owner && listing.owner.email) {
+        sendMail({
+            to: listing.owner.email,
+            subject: `New Booking — ${listing.title}`,
+            html: emailTemplates.newBookingAlert({
+                guestName: req.user.username,
+                listingTitle: listing.title,
+                checkIn: formatDate(checkIn),
+                checkOut: formatDate(checkOut),
+                totalNights: Number(totalNights),
+                totalPrice: Number(totalPrice)
+            })
+        });
+    }
+
     req.flash("success", `Payment successful! Booking confirmed — ${totalNights} night${Number(totalNights) > 1 ? "s" : ""} at ₹${Number(totalPrice).toLocaleString("en-IN")}`);
     res.json({ success: true, redirect: "/bookings" });
+};
+
+// POST /listings/:id/book  (direct booking without payment)
+module.exports.directBook = async (req, res) => {
+    const listing = await Listing.findById(req.params.id).populate("owner");
+    if (!listing) {
+        req.flash("error", "Listing not found.");
+        return res.redirect("/listings");
+    }
+
+    const { checkIn, checkOut } = req.body;
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (!checkIn || !checkOut || checkInDate < today || checkOutDate <= checkInDate) {
+        req.flash("error", "Please select valid check-in and check-out dates.");
+        return res.redirect(`/listings/${req.params.id}`);
+    }
+
+    // Check for overlapping confirmed bookings
+    const overlap = await Booking.findOne({
+        listing: listing._id,
+        status: "confirmed",
+        checkIn: { $lt: checkOutDate },
+        checkOut: { $gt: checkInDate }
+    });
+
+    if (overlap) {
+        req.flash("error", "This listing is already booked for the selected dates. Please choose different dates.");
+        return res.redirect(`/listings/${req.params.id}`);
+    }
+
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const totalNights = Math.round((checkOutDate - checkInDate) / msPerDay);
+    const totalPrice = totalNights * listing.price;
+
+    const booking = new Booking({
+        listing: listing._id,
+        guest: req.user._id,
+        checkIn: checkInDate,
+        checkOut: checkOutDate,
+        totalNights,
+        totalPrice,
+        status: "confirmed"
+    });
+
+    await booking.save();
+
+    // Send booking confirmation emails
+    const formatDate = (d) => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+
+    sendMail({
+        to: req.user.email,
+        subject: `Booking Confirmed — ${listing.title}`,
+        html: emailTemplates.bookingConfirmation({
+            listingTitle: listing.title,
+            checkIn: formatDate(checkInDate),
+            checkOut: formatDate(checkOutDate),
+            totalNights,
+            totalPrice
+        })
+    });
+
+    if (listing.owner && listing.owner.email) {
+        sendMail({
+            to: listing.owner.email,
+            subject: `New Booking — ${listing.title}`,
+            html: emailTemplates.newBookingAlert({
+                guestName: req.user.username,
+                listingTitle: listing.title,
+                checkIn: formatDate(checkInDate),
+                checkOut: formatDate(checkOutDate),
+                totalNights,
+                totalPrice
+            })
+        });
+    }
+
+    req.flash("success", `Booking confirmed — ${totalNights} night${totalNights > 1 ? "s" : ""} at ₹${totalPrice.toLocaleString("en-IN")}`);
+    res.redirect("/bookings");
 };
 
 // GET /bookings
@@ -207,6 +325,27 @@ module.exports.cancelBooking = async (req, res) => {
     }
     booking.status = "cancelled";
     await booking.save();
+
+    // Send cancellation emails to both guest and host
+    const listing = await Listing.findById(booking.listing).populate("owner");
+    if (listing) {
+        const formatDate = (d) => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+        const cancelHtml = emailTemplates.bookingCancellation({
+            listingTitle: listing.title,
+            checkIn: formatDate(booking.checkIn),
+            checkOut: formatDate(booking.checkOut),
+            cancelledBy: "guest"
+        });
+
+        // Email to guest
+        sendMail({ to: req.user.email, subject: `Booking Cancelled — ${listing.title}`, html: cancelHtml });
+
+        // Email to host
+        if (listing.owner && listing.owner.email) {
+            sendMail({ to: listing.owner.email, subject: `Booking Cancelled — ${listing.title}`, html: cancelHtml });
+        }
+    }
+
     req.flash("success", "Booking cancelled successfully.");
     res.redirect("/bookings");
 };

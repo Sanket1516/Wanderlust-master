@@ -1,0 +1,103 @@
+<% layout("/../layouts/boilerplate") %>
+
+<style>
+    .msg-bubble {
+        max-width: 70%;
+        padding: 10px 16px;
+        border-radius: 16px;
+        margin-bottom: 8px;
+        word-wrap: break-word;
+        line-height: 1.5;
+        font-size: 0.93rem;
+    }
+    .msg-sent {
+        background: #fe424d;
+        color: #fff;
+        margin-left: auto;
+        border-bottom-right-radius: 4px;
+    }
+    .msg-received {
+        background: #f0f0f0;
+        color: #333;
+        margin-right: auto;
+        border-bottom-left-radius: 4px;
+    }
+    .msg-time {
+        font-size: 0.72rem;
+        color: #999;
+        margin-top: 2px;
+    }
+    .msg-sent .msg-time { color: rgba(255,255,255,0.7); text-align: right; }
+    .msg-received .msg-time { text-align: left; }
+    .conversation-body {
+        max-height: 60vh;
+        overflow-y: auto;
+        padding: 20px 0;
+    }
+</style>
+
+<div class="row mt-4">
+    <div class="col-10 offset-1 col-md-8 offset-md-2">
+        <!-- Header -->
+        <div class="d-flex align-items-center mb-3">
+            <a href="/messages" class="btn btn-outline-secondary btn-sm me-3">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <% if (listing && listing.image) { %>
+                <img src="<%= listing.image.url %>" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:8px;" class="me-2">
+            <% } %>
+            <div>
+                <strong><%= otherUser ? otherUser.username : "Deleted User" %></strong>
+                <% if (listing) { %>
+                    <br><small class="text-muted"><%= listing.title %></small>
+                <% } %>
+            </div>
+        </div>
+        <hr>
+
+        <!-- Messages -->
+        <div class="conversation-body" id="conversationBody">
+            <% if (messages.length === 0) { %>
+                <p class="text-muted text-center">No messages yet. Send the first message below.</p>
+            <% } %>
+            <% for (let msg of messages) { %>
+                <% const isSent = msg.sender._id.equals(currentUserId); %>
+                <div class="d-flex">
+                    <div class="msg-bubble <%= isSent ? 'msg-sent' : 'msg-received' %>">
+                        <%= msg.content %>
+                        <div class="msg-time">
+                            <%= msg.createdAt.toLocaleString("en-IN", { hour:"2-digit", minute:"2-digit", day:"numeric", month:"short" }) %>
+                        </div>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+
+        <!-- Send form -->
+        <form action="/messages/<%= conversationId %>" method="POST" class="mt-3">
+            <% if (messages.length > 0) { %>
+                <%
+                    const first = messages[0];
+                    const recvId = first.sender._id.equals(currentUserId) ? first.receiver._id : first.sender._id;
+                %>
+                <input type="hidden" name="receiverId" value="<%= recvId %>">
+                <input type="hidden" name="listingId" value="<%= first.listing._id %>">
+            <% } else if (otherUser && listing) { %>
+                <input type="hidden" name="receiverId" value="<%= otherUser._id %>">
+                <input type="hidden" name="listingId" value="<%= listing._id %>">
+            <% } %>
+            <div class="input-group">
+                <input type="text" name="content" class="form-control" placeholder="Type a message..." required maxlength="2000" autocomplete="off">
+                <button type="submit" class="btn btn-danger">
+                    <i class="fa-solid fa-paper-plane"></i> Send
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Auto-scroll to the bottom of the conversation
+    const body = document.getElementById("conversationBody");
+    if (body) body.scrollTop = body.scrollHeight;
+</script>

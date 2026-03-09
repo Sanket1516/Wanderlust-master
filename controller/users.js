@@ -1,6 +1,8 @@
 const User = require("../models/user.js");
 const Listing = require("../models/listing.js");
 const Booking = require("../models/booking.js");
+const { sendMail } = require("../utils/mailer.js");
+const emailTemplates = require("../utils/emailTemplates.js");
 
 
 module.exports.signup = async (req, res,next)=>{
@@ -13,6 +15,12 @@ module.exports.signup = async (req, res,next)=>{
         if(err){
             next(err);
         }
+        // Send welcome email (non-blocking)
+        sendMail({
+            to: email,
+            subject: "Welcome to Wanderlust!",
+            html: emailTemplates.welcomeEmail(username)
+        });
         req.flash("success", "Welcome to wanderlust");
         res.redirect("/listings");
     });
