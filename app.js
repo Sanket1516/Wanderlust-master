@@ -41,7 +41,7 @@ if(process.env.NODE_ENV !== "production"){
     // 3. Database Connection
     // ===============================================
     async function main() {
-        mongoose.connect(mongoose_url); // Connect to MongoDB
+        await mongoose.connect(mongoose_url); // Connect to MongoDB
     }
 
     main()
