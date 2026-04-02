@@ -1,0 +1,25 @@
+# Dependency directories
+node_modules/
+
+# Environment Variables (CRITICAL FOR SECURITY)
+.env
+.env.local
+
+# Optional npm cache and logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm/
+package-lock.json
+
+# Local Uploads/Assets from users testing (if applicable)
+uploads/
+/public/uploads/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Any temporary files (like the tmpclaude ones in your directory)
+tmpclaude-*
+node_modules

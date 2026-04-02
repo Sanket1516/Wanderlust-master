@@ -34,8 +34,8 @@ if(process.env.NODE_ENV !== "production"){
     // ===============================================
     // 2. Configuration Variables
     // ===============================================
-    const mongoose_url = "mongodb://127.0.0.1:27017/vanderlust"; // MongoDB connection URL
-    let port = 8080; // Port on which the server will listen
+    const mongoose_url = process.env.ATLASDB_URL || "mongodb://127.0.0.1:27017/vanderlust"; // MongoDB connection URL
+    let port = process.env.PORT || 8080; // Port on which the server will listen
 
     // ===============================================
     // 3. Database Connection
