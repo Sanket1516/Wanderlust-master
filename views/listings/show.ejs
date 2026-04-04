@@ -3,7 +3,7 @@
     <body>
         <script>
             const mapToken = '<%= process.env.MAPBOX_TOKEN %>';
-            const coordinates = <%-JSON.stringify(data.geometry.coordinates) %>;
+            const coordinates = JSON.parse('<%- JSON.stringify(data.geometry.coordinates) %>');
         </script>
 
         <div class="row mt-4 mb-2">
@@ -256,7 +256,7 @@
                 const summaryBox    = document.getElementById("booking-summary");
                 const summaryNights = document.getElementById("summary-nights");
                 const summaryTotal  = document.getElementById("summary-total");
-                const pricePerNight = <%= data.price %>;
+                const pricePerNight = Number('<%= data.price %>');
 
                 if (!checkInInput) return;
 
@@ -288,6 +288,108 @@
                 });
 
                 checkOutInput.addEventListener("change", updateSummary);
+            })();
+        </script>
+        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+        <script>
+            (function() {
+                const bookingForm = document.getElementById("booking-form");
+                if (!bookingForm) return;
+
+                const payBtn = bookingForm.querySelector('button[type="submit"]');
+                const listingId = "<%= data._id %>";
+
+                bookingForm.addEventListener("submit", async function(e) {
+                    e.preventDefault();
+                    if (!bookingForm.checkValidity()) {
+                        e.stopPropagation();
+                        bookingForm.classList.add('was-validated');
+                        return;
+                    }
+
+                    const checkIn = document.getElementById("checkIn").value;
+                    const checkOut = document.getElementById("checkOut").value;
+
+                    if (!checkIn || !checkOut) return;
+
+                    payBtn.disabled = true;
+                    const originalBtnHtml = payBtn.innerHTML;
+                    payBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Processing...';
+
+                    try {
+                        const res = await fetch("/listings/" + listingId + "/book", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ checkIn, checkOut })
+                        });
+                        const data = await res.json();
+                        
+                        if (!data.success) {
+                            alert(data.error || "Something went wrong.");
+                            payBtn.disabled = false;
+                            payBtn.innerHTML = originalBtnHtml;
+                            return;
+                        }
+
+                        const options = {
+                            key: data.key,
+                            amount: data.order.amount,
+                            currency: data.order.currency,
+                            name: "Wanderlust",
+                            description: data.booking.totalNights + " night(s)",
+                            image: data.listing.image,
+                            order_id: data.order.id,
+
+                            handler: async function(response) {
+                                payBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Confirming...';
+                                const verifyRes = await fetch("/bookings/verify", {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({
+                                        razorpay_order_id: response.razorpay_order_id,
+                                        razorpay_payment_id: response.razorpay_payment_id,
+                                        razorpay_signature: response.razorpay_signature
+                                    })
+                                });
+                                const verifyData = await verifyRes.json();
+                                if (verifyData.success) {
+                                    window.location.href = verifyData.redirect;
+                                } else {
+                                    alert(verifyData.error || "Payment verification failed.");
+                                    payBtn.disabled = false;
+                                    payBtn.innerHTML = originalBtnHtml;
+                                }
+                            },
+                            theme: { color: "#fe424d" },
+                            modal: {
+                                ondismiss: function() {
+                                    payBtn.disabled = false;
+                                    payBtn.innerHTML = originalBtnHtml;
+                                }
+                            }
+                        };
+
+                        if (data.user) {
+                            options.prefill = {
+                                name: data.user.name,
+                                email: data.user.email
+                            };
+                        }
+
+                        const rzp = new Razorpay(options);
+                        rzp.on('payment.failed', function (response){
+                            alert(response.error.description);
+                            payBtn.disabled = false;
+                            payBtn.innerHTML = originalBtnHtml;
+                        });
+                        rzp.open();
+
+                    } catch (err) {
+                        alert("Something went wrong. Please try again.");
+                        payBtn.disabled = false;
+                        payBtn.innerHTML = originalBtnHtml;
+                    }
+                });
             })();
         </script>
         <script>

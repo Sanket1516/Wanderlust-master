@@ -81,7 +81,7 @@ module.exports.createOrder = async (req, res) => {
     const order = await razorpay.orders.create({
         amount: totalPrice * 100,   // e.g., ₹5000 → 500000 paise
         currency: "INR",
-        receipt: `booking_${listing._id}_${Date.now()}`,
+        receipt: `bk_${Date.now()}`,
         // notes are stored on the order and can be retrieved during verification
         notes: {
             listingId: listing._id.toString(),

@@ -7,8 +7,8 @@ const bookingController = require("../controller/booking.js");
 // GET /bookings — My Bookings page
 router.get("/bookings", isLoggedIn, wrapAsync(bookingController.renderMyBookings));
 
-// POST /listings/:id/book — Direct booking (no payment for now)
-router.post("/listings/:id/book", isLoggedIn, wrapAsync(bookingController.directBook));
+// POST /listings/:id/book — Creates a Razorpay Order
+router.post("/listings/:id/book", isLoggedIn, wrapAsync(bookingController.createOrder));
 
 // POST /bookings/verify — Verify Razorpay payment signature and create booking (AJAX)
 router.post("/bookings/verify", isLoggedIn, wrapAsync(bookingController.verifyPayment));
