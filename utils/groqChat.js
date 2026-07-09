@@ -34,7 +34,8 @@ const SYSTEM_PROMPT = [
  * @returns {Promise<{ok: boolean, message?: string, error?: string, status?: number}>}
  */
 async function chatWithGroq(messages, options = {}) {
-    const apiKey = getGroqApiKey();
+    const apiKey = getGroqApiKey()?.trim();
+
     if (!apiKey) {
         return {
             ok: false,
@@ -54,18 +55,20 @@ async function chatWithGroq(messages, options = {}) {
     ];
 
     try {
+        const requestBody = {
+            model: GROQ_MODEL,
+            messages: fullMessages,
+            temperature,
+            max_tokens: maxTokens,
+        };
+
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${apiKey}`,
             },
-            body: JSON.stringify({
-                model: GROQ_MODEL,
-                messages: fullMessages,
-                temperature,
-                max_tokens: maxTokens,
-            }),
+            body: JSON.stringify(requestBody),
         });
 
         const payload = await response.json();

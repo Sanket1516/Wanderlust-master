@@ -9,6 +9,7 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+*.log
 .npm/
 package-lock.json
 
@@ -19,7 +20,3 @@ uploads/
 # OS generated files
 .DS_Store
 Thumbs.db
-
-# Any temporary files (like the tmpclaude ones in your directory)
-tmpclaude-*
-node_modules

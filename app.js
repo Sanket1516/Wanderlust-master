@@ -1,8 +1,8 @@
 // ===============================================
 // Including env variables
-if(process.env.NODE_ENV !== "production"){
-    require("dotenv").config();
-}
+// Load .env for local/dev runs regardless of NODE_ENV so API keys are available
+// when the app is started from editors, terminals, or process managers.
+require("dotenv").config();
     
     // ===============================================
     // 1. Module Imports
@@ -107,7 +107,7 @@ if(process.env.NODE_ENV !== "production"){
     const messageRouter = require("./routes/message.js");
 
     const sessionOptions = {
-        secret : "Mysupersecretcode",
+        secret : process.env.SESSION_SECRET || "Mysupersecretcode",
         resave : false,
         saveUninitialized : true,
         cookie : {
@@ -151,19 +151,10 @@ if(process.env.NODE_ENV !== "production"){
     // (like /listings/:id) to ensure they are matched correctly.
     // ===============================================
 
-    //for demo purposes
-    // Root Route: Basic confirmation that the server is running
-    // app.get("/demouser", async (req, res) => {
-    //     let fakeuser = new User({
-    //         email : "SAnket@124gmail.com",
-    //         username : "sanket"
-    //         //till we have not defied the username till we can use it
-    //     });
-
-    //     let registerUser = await User.register(fakeuser, "sanket123")//we pass the user and password it also check the username is unique or not
-    //     res.send(registerUser);
-    //     return;
-    // });         
+    // Root Route: Redirect to listings page
+    app.get("/", (req, res) => {
+        res.redirect("/listings");
+    });
 
     //if the api comes for /listings/----- then listings middleware this will called for all the the request and handle it
     app.use("/listings", listingsRouter);
