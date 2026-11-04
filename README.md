@@ -58,3 +58,7 @@ No automated tests, Docker setup, payment webhooks or refund automation yet; mes
 ## Author
 
 Sanket Mali · [GitHub](https://github.com/Sanket1516)
+
+## License
+
+ISC, see [LICENSE](LICENSE) (matches `package.json`).
