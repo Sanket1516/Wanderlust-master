@@ -1,6 +1,54 @@
+<div align="center">
+
 # Wanderlust
 
-An Airbnb-style accommodation marketplace built as a Node.js/Express MVC monolith with server-rendered EJS views.
+**An Airbnb-style accommodation marketplace built as a Node.js/Express MVC monolith with server-rendered EJS views.**
+
+![Node.js](https://img.shields.io/badge/Node.js-339933?logo=nodedotjs&logoColor=white)
+![Express](https://img.shields.io/badge/Express_5-000000?logo=express&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=white)
+![EJS](https://img.shields.io/badge/EJS-B4CA65?logo=ejs&logoColor=black)
+![Bootstrap](https://img.shields.io/badge/Bootstrap-7952B3?logo=bootstrap&logoColor=white)
+![Razorpay](https://img.shields.io/badge/Razorpay-0C2451?logo=razorpay&logoColor=white)
+
+<img src="docs/screenshots/01-home.jpg" alt="Wanderlust home page with category bar and listing cards" width="900" />
+
+</div>
+
+## Screenshots
+
+> Real captures of the running app with the seed listings from `init/data.js` and demo users.
+
+### Browse and book
+
+| Listing details | Search ("cabin") |
+|:---:|:---:|
+| <img src="docs/screenshots/02-listing.jpg" alt="Listing detail page" width="430" /> | <img src="docs/screenshots/03-search.jpg" alt="Search results for cabin" width="430" /> |
+| **My bookings** | **Wishlist** |
+| <img src="docs/screenshots/07-bookings.jpg" alt="Guest bookings with check-in, check-out and total paid" width="430" /> | <img src="docs/screenshots/06-wishlist.jpg" alt="Saved listings" width="430" /> |
+| **Messages inbox** | **Host–guest conversation** |
+| <img src="docs/screenshots/08-inbox.jpg" alt="Inbox with unread count" width="430" /> | <img src="docs/screenshots/09-conversation.jpg" alt="Chat between guest and host" width="430" /> |
+| **Profile** | **Host a place (with AI description)** |
+| <img src="docs/screenshots/10-profile.jpg" alt="User profile with stats and recent bookings" width="430" /> | <img src="docs/screenshots/15-new-listing.jpg" alt="New listing form with Generate with AI" width="430" /> |
+
+### Admin panel
+
+| Dashboard | Listings moderation |
+|:---:|:---:|
+| <img src="docs/screenshots/11-admin-dashboard.jpg" alt="Admin dashboard with totals and recent bookings" width="430" /> | <img src="docs/screenshots/12-admin-listings.jpg" alt="Admin listings table" width="430" /> |
+| **Users** | **Bookings** |
+| <img src="docs/screenshots/13-admin-users.jpg" alt="Admin users table" width="430" /> | <img src="docs/screenshots/14-admin-bookings.jpg" alt="Admin bookings table" width="430" /> |
+
+<details>
+<summary>More: full listing page (reviews, AI review summary, map), sign-up and mobile</summary>
+
+<p align="center">
+<img src="docs/screenshots/02-listing-full.jpg" alt="Full listing page" width="700" /><br/>
+<img src="docs/screenshots/04-signup.jpg" alt="Sign-up page" width="700" /><br/>
+<img src="docs/screenshots/16-mobile.jpg" alt="Mobile home" width="280" />
+</p>
+
+</details>
 
 ## Features
 
